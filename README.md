@@ -32,7 +32,7 @@ All models were evaluated under strict **leakage-free protocols** (physical `fru
 | **Treatment Screening** | PCA (5 components) + LDA | 3-Class Accuracy | **69.17% ± 11.59%** | Literature target: 60%–71% |
 | **Treatment Screening** | Balanced Accuracy | 3-Class Balanced Acc | **73.89%** | Macro-F1: 69.42% |
 | **High-Dose Separation** | PCA + LDA (Binary) | Control vs High Nativo | **97.50%** | Clear chemical signature separation |
-| **Selective Rejection** | Confidence Rejection Sweep | Accuracy @ 28.8% Coverage | **89.90%** | Accuracy rises as uncertain scans rejected |
+| **Selective Rejection** | Confidence Rejection Sweep | Balanced Acc @ 28.75% Coverage | **86.54%** (89.86% ord. acc) | Rejects 71.25% of borderline scans (synthetic simulation only) |
 | **OOD Anomaly Detection** | Mahalanobis Distance (LedoitWolf) | 240 SpectroFood Apples | **17.1% flagged OOD** | Safely detects foreign varieties & lighting |
 | **Visual Surface Quality** | MobileNetV3-Small (PyTorch) | 2-Class Test Accuracy | **95.67%** | Precision: 97.24%, Recall: 94.00% |
 | **Ripeness Grading** | Logistic Regression (GroupKFold) | 3-Stage Ripeness Acc | **64.07%** | Longitudinal harvest tracking |
@@ -111,7 +111,7 @@ Navigate through the 10 interactive pages:
 * **Page 4–5**: Model benchmarks (3-class PCA+LDA, binary experiments, coverage curves).
 * **Page 6**: Physical hardware calibration protocol (dark/white reference, UV405 crosstalk).
 * **Page 7–9**: Honest scientific limitations, product roadmap (V0 to V3), and teacher defense guide.
-* **Page 10 (`📸 Live Apple Tester`)**: Upload any apple image to run real-time 18-channel spectral reconstruction, virtual hardware degradation sliders, and multi-model inference.
+* **Page 10 (`🔬 Virtual Apple Scan Demonstrator — Simulation Only`)**: Illustrative demonstration of virtual spectral response, noise/drift simulation controls, and multi-model workflow. Contains mandatory simulation disclaimers.
 
 ### 3. Test Any Apple Photo via Command Line
 

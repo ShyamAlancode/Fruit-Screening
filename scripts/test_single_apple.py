@@ -122,16 +122,17 @@ def test_apple(image_path: str):
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image not found: {image_path}")
 
-    print("=" * 65)
-    print("🍎 CFRD APPLE TESTING SUITE (NO HARDWARE REQUIRED)")
+    print("=" * 70)
+    print("🔬 CFRD VIRTUAL APPLE SCAN DEMONSTRATOR — SIMULATION ONLY")
     print(f"Target Image: {os.path.basename(image_path)}")
-    print("=" * 65)
+    print("WARNING: Simulation only — no uploaded image has been measured by AS7265x hardware.")
+    print("No pesticide, residue, MRL, safety, or edibility conclusion is produced.")
+    print("=" * 70)
 
     with Image.open(image_path) as im:
         # -------------------------------------------------------------
         # 1. External Visual Quality (Defect Analysis)
         # -------------------------------------------------------------
-        # Check if trained MobileNetV3 deep learning model exists
         mobilenet_path = r"d:\CFRD\project\models\camera\camera_quality_mobilenet.pth"
         used_mobilenet = False
         if TORCH_AVAILABLE and os.path.exists(mobilenet_path):
@@ -151,7 +152,7 @@ def test_apple(image_path: str):
                     logits = net(t_im)
                     probs = torch.softmax(logits, dim=1).numpy()[0]
                 defect_prob = float(probs[1])
-                visual_label = "Possible defect / blemish" if defect_prob > 0.50 else "Good visual surface"
+                visual_label = "Possible defect" if defect_prob > 0.50 else "Good"
                 used_mobilenet = True
             except Exception:
                 used_mobilenet = False
@@ -162,12 +163,12 @@ def test_apple(image_path: str):
             lum = 0.299 * rgb_arr[:, :, 0] + 0.587 * rgb_arr[:, :, 1] + 0.114 * rgb_arr[:, :, 2]
             blemish_ratio = float((lum < 0.22).mean())
             defect_prob = float(np.clip(blemish_ratio * 4.5, 0.05, 0.95))
-            visual_label = "Possible defect / blemish" if defect_prob > 0.40 else "Good visual surface"
+            visual_label = "Possible defect" if defect_prob > 0.40 else "Good"
 
-        backend_tag = "(MobileNetV3 95.7% Acc)" if used_mobilenet else "(Heuristic)"
-        print(f"\n[1] External Visual Quality {backend_tag}:")
-        print(f"    Status:     {visual_label}")
-        print(f"    Confidence: {max(defect_prob, 1.0 - defect_prob)*100:.1f}%")
+        print(f"\n[1] External Visual Quality:")
+        print(f"    Status:                  External visual quality: {visual_label}")
+        print(f"    Visual Model Confidence: {max(defect_prob, 1.0 - defect_prob)*100:.1f}%")
+        print(f"    Validation Status:       Public-dataset model; Pi Camera transfer validation pending.")
 
         # -------------------------------------------------------------
         # 2. Ripeness & Variety Classification
@@ -182,9 +183,9 @@ def test_apple(image_path: str):
             rip_pred_idx = rip_obj["pipeline"].predict(vfeats)[0]
             rip_proba = rip_obj["pipeline"].predict_proba(vfeats)[0]
             rip_classes = rip_obj["classes"]
-            print(f"\n[2] Ripeness Grading:")
-            print(f"    Stage:      {rip_classes[rip_pred_idx]}")
-            print(f"    Confidence: {rip_proba[rip_pred_idx]*100:.1f}%")
+            print(f"\n[2] Ripeness Grading (Public Longitudinal Dataset):")
+            print(f"    Stage:                   {rip_classes[rip_pred_idx]}")
+            print(f"    Confidence:              {rip_proba[rip_pred_idx]*100:.1f}%")
 
         if var_model_path:
             var_obj = joblib.load(var_model_path)
@@ -192,15 +193,16 @@ def test_apple(image_path: str):
             var_proba = var_obj["pipeline"].predict_proba(vfeats)[0]
             var_classes = var_obj["classes"]
             print(f"\n[3] Variety Classification:")
-            print(f"    Predicted:  {var_classes[var_pred_idx].title()}")
-            print(f"    Confidence: {var_proba[var_pred_idx]*100:.1f}%")
+            print(f"    Variety Estimate:        {var_classes[var_pred_idx].title()} (public image model only)")
+            print(f"    Confidence:              {var_proba[var_pred_idx]*100:.1f}%")
 
         # -------------------------------------------------------------
         # 3. Virtual AS7265x Sensor Simulation & Treatment Screening
         # -------------------------------------------------------------
         sim_spec = estimate_18ch_spectrum_from_image(im)
-        print(f"\n[4] AS7265x 18-Channel Optical Reconstruction:")
-        print(f"    Simulated 18 channels (410-940 nm) from surface pigments.")
+        print(f"\n[4] Illustrative 18-Channel Spectral Simulation:")
+        print(f"    Notice: Illustrative virtual spectrum generated from image-derived heuristics.")
+        print(f"    Not a measured or scientifically reconstructed AS7265x spectrum.")
 
         treatment_model_path = find_latest_model(MODELS_DIR_TREATMENT, "treatment_3class_pca_lda_*.joblib")
         if treatment_model_path:
@@ -210,7 +212,13 @@ def test_apple(image_path: str):
             # Predict
             pred_class = int(t_pipe.predict(sim_spec.reshape(1, -1))[0])
             pred_proba = t_pipe.predict_proba(sim_spec.reshape(1, -1))[0]
-            pred_label = CLASS_LABELS.get(pred_class, f"Class {pred_class}")
+            
+            synthetic_labels = {
+                0: "Synthetic control-like",
+                1: "Synthetic low-treatment-like",
+                2: "Synthetic high-treatment-like",
+            }
+            pred_label = synthetic_labels.get(pred_class, f"Synthetic class {pred_class}")
             max_conf = float(pred_proba[pred_class])
 
             # OOD check
@@ -221,51 +229,36 @@ def test_apple(image_path: str):
             p95_thresh = ood_scorer.threshold_at_percentile(95.0)
             is_uncertain = (max_conf < 0.65) or (ood_dist > p95_thresh)
 
-            # Calculate physical & nutritional parameters (standard medium apple: 182g)
+            print(f"\n[5] Treatment-Condition Model (Simulation Demonstration Only):")
+            if is_uncertain:
+                print(f"    Condition:               Synthetic uncertain")
+                print(f"    Decision Status:         ⚠️ SYNTHETIC UNCERTAIN (Out-of-distribution or low confidence)")
+            else:
+                print(f"    Condition:               {pred_label}")
+                print(f"    Decision Status:         IN-DISTRIBUTION SIMULATION")
+            print(f"    Model Softmax Confidence:{max_conf * 100:.1f}%")
+            print(f"    OOD Anomaly Score:       {ood_dist:.2f} (95% Thresh: {p95_thresh:.2f})")
+            print(f"    Benchmark Context:       On the generated synthetic dataset, the model reaches")
+            print(f"                             86.54% accepted-scan balanced accuracy (89.86% ordinary accuracy)")
+            print(f"                             only after rejecting 71.25% of borderline scans (28.75% coverage).")
+            print(f"    Laboratory Advisory:     Follow standard food hygiene guidance. For residue verification,")
+            print(f"                             accredited laboratory testing (LC-MS/MS) is required.")
+
+            # Generic nutritional estimate from mass
             est_weight_g = 182.0
             est_calories = int(round(est_weight_g * 0.52))  # 52 kcal / 100g
             est_carbs_g = round(est_weight_g * 0.138, 1)    # 13.8g / 100g
             est_fiber_g = round(est_weight_g * 0.024, 1)    # 2.4g / 100g
-            est_brix = 12.8 if rip_pred_idx == 1 else (11.2 if rip_pred_idx == 0 else 13.6)
 
-            # Treatment Index & Consumer Action Advisory Tier
-            # Class 0: Control (<25%), Class 1: Moderate (40-65%), Class 2: Elevated (>75%)
-            if pred_class == 0:
-                treatment_index_pct = max(10.0, (1.0 - max_conf) * 40.0)
-                advisory_tier = "🟢 LOW / STANDARD COMMERCIAL PROFILE"
-                advisory_wash = "Safe for consumption following standard tap-water rinse."
-                warning_level = "Low Risk Profile (Standard orchard wash)"
-            elif pred_class == 1:
-                treatment_index_pct = 45.0 + (max_conf * 25.0)
-                advisory_tier = "🟡 MODERATE SURFACE TREATMENT DETECTED"
-                advisory_wash = "Recommended: 30-second wash in water + 1% baking soda (bicarbonate) or peel before eating."
-                warning_level = "Moderate Surface Anomaly"
-            else:
-                treatment_index_pct = 70.0 + (max_conf * 25.0)
-                advisory_tier = "🔴 ELEVATED CHEMICAL SURFACE ANOMALY"
-                advisory_wash = "Recommended: Thoroughly scrub with warm water, peel outer skin, or refer to food testing triage."
-                warning_level = "Elevated Surface Residue Profile"
+            print(f"\n[6] Weight & Nutrition Module (Demonstration Input):")
+            print(f"    Demonstration Mass:      {est_weight_g:.0f} grams (Simulated load-cell reading)")
+            print(f"    Estimated Calories:      {est_calories} kcal (based on mass × generic USDA 52 kcal/100g reference)")
+            print(f"    Total Carbohydrates:     {est_carbs_g} g  |  Dietary Fiber: {est_fiber_g} g")
+            print(f"    Note:                    Nutritional estimate based on mass, not a chemical measurement.")
 
-            print(f"\n[5] Chemical Treatment Screening & Advisory Tier:")
-            print(f"    Treatment Level:     {pred_label} (Index: {treatment_index_pct:.1f}%)")
-            print(f"    Confidence:          {max_conf * 100:.1f}%")
-            print(f"    Advisory Status:     {advisory_tier}")
-            print(f"    Consumer Guidance:   {advisory_wash}")
-            print(f"    OOD Anomaly Score:   {ood_dist:.2f} (Max Normal: {p95_thresh:.2f})")
-            if is_uncertain:
-                print(f"    Decision Gate:       ⚠️ UNCERTAIN SCAN (Rejecting scan protects 85%+ accuracy)")
-            else:
-                print(f"    Decision Gate:       ✅ HIGH-CONFIDENCE INFERENCE (Accuracy in this tier: ~90%)")
-
-            print(f"\n[6] Physical & Nutritional Card:")
-            print(f"    Estimated Weight:    {est_weight_g:.0f} grams (Standard Medium Fruit)")
-            print(f"    Caloric Content:     {est_calories} kcal")
-            print(f"    Total Carbohydrates: {est_carbs_g} g  |  Dietary Fiber: {est_fiber_g} g")
-            print(f"    Estimated Sweetness: {est_brix:.1f} °Bx (Brix index)")
-
-    print("\n" + "=" * 65)
+    print("\n" + "=" * 70)
     print(f"Notice: {DISCLAIMER_BANNER}")
-    print("=" * 65)
+    print("=" * 70)
 
 
 if __name__ == "__main__":

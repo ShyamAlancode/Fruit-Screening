@@ -167,7 +167,7 @@ PAGES = [
     "7 · Honest Limitations",
     "8 · Future Product Roadmap",
     "9 · Teacher Explanation Mode",
-    "10 · 📸 Live Apple Tester",
+    "10 · 🔬 Virtual Apple Scan Demonstrator — Simulation Only",
 ]
 
 with st.sidebar:
@@ -851,19 +851,17 @@ no claim about detection, concentration, or food safety can be made.
 
 
 # ===========================================================================
-# PAGE 10 — Live Apple Tester (Upload & Test)
+# PAGE 10 — Virtual Apple Scan Demonstrator — Simulation Only
 # ===========================================================================
 elif page == PAGES[9]:
     show_disclaimer()
-    st.title("📸 Live Apple Tester (No Hardware Required)")
-    st.subheader("Manual Testing & End-to-End Multi-Model Demonstration")
+    st.title("🔬 Virtual Apple Scan Demonstrator — Simulation Only")
+    st.subheader("Software Simulation & Pre-Hardware Feasibility Exploration")
 
     st.markdown("""
-    <div class="info-box">
-    💡 <strong>How This Works Without Physical AS7265x Hardware:</strong><br>
-    Upload any apple photograph or choose from real dataset samples below. The pipeline extracts
-    surface color distributions, estimates the 18-channel AS7265x spectral profile using biological
-    reflectance priors, and runs our trained machine learning models in real-time.
+    <div class="warning-box">
+    ⚠️ <strong>Simulation only — no uploaded image has been measured by AS7265x hardware. No pesticide, residue, MRL, safety, or edibility conclusion is produced.</strong><br><br>
+    <strong>An RGB image cannot produce a real 18-channel AS7265x spectrum, especially in NIR bands (730–940 nm).</strong> Any displayed 18-channel spectrum derived from an uploaded image is an illustrative heuristic simulation only. It must not be fed into or presented as a real treatment-condition inference.
     </div>
     """, unsafe_allow_html=True)
 
@@ -880,7 +878,7 @@ elif page == PAGES[9]:
     sample_files_bad  = [os.path.join(samples_dir_bad, f) for f in os.listdir(samples_dir_bad) if f.lower().endswith(('.jpg', '.png'))][:5]
 
     with col_input:
-        st.markdown("### 1. Select or Upload Apple")
+        st.markdown("### 1. Select or Upload Demonstration Apple Image")
         input_mode = st.radio("Input Source", ["Sample Apple from Dataset", "Upload Custom Apple Photo"], horizontal=True)
 
         selected_image = None
@@ -905,10 +903,10 @@ elif page == PAGES[9]:
                 sample_name = os.path.basename(chosen_path)
 
         if selected_image is not None:
-            st.image(selected_image, caption=f"Target: {sample_name}", use_column_width=True)
+            st.image(selected_image, caption=f"Target Demonstration Image: {sample_name}", use_column_width=True)
 
     with col_sim:
-        st.markdown("### 2. Virtual Hardware Settings")
+        st.markdown("### 2. Virtual Hardware Simulation Controls")
         st.markdown("<small style='color:#90a4ae;'>Simulate how physical sensor noise affects model certainty:</small>", unsafe_allow_html=True)
         sim_gain = st.slider("Electronic Gain", 0.5, 2.0, 1.0, 0.05)
         sim_noise = st.slider("Sensor Noise (Std Dev)", 0.0, 0.08, 0.01, 0.005)
@@ -916,10 +914,10 @@ elif page == PAGES[9]:
 
     if selected_image is not None:
         st.markdown("---")
-        st.markdown("## 🔍 Live Inference Results")
+        st.markdown("## 🔍 Simulation Pipeline Demonstration")
 
         # -------------------------------------------------------------
-        # Reconstruct 18-channel AS7265x spectrum from image
+        # Reconstruct 18-channel AS7265x spectrum from image (HEURISTIC ONLY)
         # -------------------------------------------------------------
         from scripts.test_single_apple import (
             estimate_18ch_spectrum_from_image,
@@ -938,7 +936,7 @@ elif page == PAGES[9]:
         )
 
         # -------------------------------------------------------------
-        # 1. Treatment-Condition Classifier
+        # 1. Treatment-Condition Classifier (Synthetic Simulation)
         # -------------------------------------------------------------
         model_path = find_latest_model(r"d:\CFRD\project\models\treatment_condition", "treatment_3class_pca_lda_*.joblib")
         if model_path:
@@ -946,8 +944,14 @@ elif page == PAGES[9]:
             pipeline = t_obj["pipeline"]
             pred_class = int(pipeline.predict(spec.reshape(1, -1))[0])
             pred_proba = pipeline.predict_proba(spec.reshape(1, -1))[0]
-            pred_label = CLASS_LABELS.get(pred_class, f"Class {pred_class}")
             confidence = float(pred_proba[pred_class])
+
+            synthetic_labels = {
+                0: "Synthetic control-like",
+                1: "Synthetic low-treatment-like",
+                2: "Synthetic high-treatment-like",
+            }
+            pred_label = synthetic_labels.get(pred_class, f"Synthetic class {pred_class}")
 
             # OOD calculation
             df_roomi = pd.read_csv(SYNTHETIC_CSV_PATH)
@@ -957,42 +961,44 @@ elif page == PAGES[9]:
             p95_thresh = ood_scorer.threshold_at_percentile(95.0)
 
             is_accepted = (confidence >= 0.70) and (ood_dist <= p95_thresh)
+            display_condition = pred_label if is_accepted else "Synthetic uncertain"
 
             card_col1, card_col2, card_col3 = st.columns(3)
             with card_col1:
-                status_color = "#4caf50" if pred_class == 0 else ("#ff9800" if pred_class == 1 else "#ef5350")
+                status_color = "#4caf50" if (is_accepted and pred_class == 0) else ("#29b6f6" if is_accepted else "#ff9800")
                 st.markdown(
                     f'<div class="metric-card" style="border-left: 5px solid {status_color};">'
-                    f'<div class="metric-label">Screening Decision</div>'
-                    f'<div class="metric-value" style="font-size:1.6rem; color:{status_color};">{pred_label}</div>'
-                    f'<small style="color:#90a4ae;">{SYNTHETIC_LABEL}</small>'
+                    f'<div class="metric-label">Treatment-Condition (Simulation)</div>'
+                    f'<div class="metric-value" style="font-size:1.4rem; color:{status_color};">{display_condition}</div>'
+                    f'<small style="color:#90a4ae;">Generated 20-fruit simulation model</small>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
             with card_col2:
                 st.markdown(
                     f'<div class="metric-card">'
-                    f'<div class="metric-label">Softmax Confidence</div>'
+                    f'<div class="metric-label">Model Softmax Confidence</div>'
                     f'<div class="metric-value">{confidence*100:.1f}%</div>'
                     f'<small style="color:#90a4ae;">Threshold for acceptance: 70.0%</small>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
             with card_col3:
-                status_badge = "🟢 ACCEPTED" if is_accepted else "🟡 UNCERTAIN / RE-SCAN"
+                status_badge = "🟢 IN-DISTRIBUTION SIMULATION" if is_accepted else "🟡 SYNTHETIC UNCERTAIN"
                 st.markdown(
                     f'<div class="metric-card">'
-                    f'<div class="metric-label">Inference Status</div>'
-                    f'<div class="metric-value" style="font-size:1.4rem;">{status_badge}</div>'
-                    f'<small style="color:#90a4ae;">OOD Dist: {ood_dist:.2f} (Max: {p95_thresh:.2f})</small>'
+                    f'<div class="metric-label">Simulation Gate</div>'
+                    f'<div class="metric-value" style="font-size:1.15rem;">{status_badge}</div>'
+                    f'<small style="color:#90a4ae;">OOD Score: {ood_dist:.2f} (95% Max: {p95_thresh:.2f})</small>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
 
         # -------------------------------------------------------------
-        # Spectrum Bar Plot
+        # Spectrum Bar Plot (Clearly Marked as Heuristic)
         # -------------------------------------------------------------
-        st.markdown("### 📡 Reconstructed AS7265x 18-Channel Spectral Signature")
+        st.markdown("### 📡 Illustrative Simulated AS7265x Spectral Response")
+        st.caption("Notice: Illustrative virtual spectrum generated from image-derived heuristics. Not a measured or scientifically reconstructed AS7265x spectrum.")
         fig, ax = plt.subplots(figsize=(10, 3.2), facecolor="#0d2137")
         ax.set_facecolor("#0d2137")
         palette = plt.cm.rainbow(np.linspace(0, 1, 18))
@@ -1000,16 +1006,16 @@ elif page == PAGES[9]:
         ax.set_xticks(range(18))
         ax.set_xticklabels([f"{wl}nm" for wl in AS7265X_CENTRES_NM], rotation=45, fontsize=8, color="#90caf9")
         ax.set_ylabel("Calibrated Reflectance", color="#90caf9")
-        ax.set_title(f"Simulated Optical Response: {sample_name}", color="#e3f2fd", fontsize=10)
+        ax.set_title(f"Illustrative Virtual Spectrum (Simulation Only): {sample_name}", color="#e3f2fd", fontsize=10)
         ax.tick_params(colors="#90caf9")
         ax.spines[:].set_color("#1e3a5f")
         st.pyplot(fig, use_container_width=True)
         plt.close(fig)
 
         # -------------------------------------------------------------
-        # Additional Quality & Ripeness Modules
+        # Additional Quality Modules (Honest Academic Labels)
         # -------------------------------------------------------------
-        st.markdown("### 🍎 Complementary Quality Analysis")
+        st.markdown("### 🍎 Quality & Metadata Models (Public Datasets)")
         q_col1, q_col2, q_col3 = st.columns(3)
 
         # Visual Quality via MobileNetV3 (with heuristic fallback)
@@ -1032,7 +1038,7 @@ elif page == PAGES[9]:
                     logits = net(t_im)
                     probs = torch.softmax(logits, dim=1).numpy()[0]
                 defect_prob = float(probs[1])
-                visual_status = "Possible Defect / Blemish" if defect_prob > 0.50 else "Good Surface Quality"
+                visual_status = "Possible defect" if defect_prob > 0.50 else "Good"
                 used_mobilenet = True
             except Exception:
                 used_mobilenet = False
@@ -1042,14 +1048,13 @@ elif page == PAGES[9]:
             lum = 0.299 * im_arr[:, :, 0] + 0.587 * im_arr[:, :, 1] + 0.114 * im_arr[:, :, 2]
             blemish_ratio = float((lum < 0.22).mean())
             defect_prob = float(np.clip(blemish_ratio * 4.5, 0.05, 0.95))
-            visual_status = "Possible Defect / Blemish" if defect_prob > 0.40 else "Good Surface Quality"
+            visual_status = "Possible defect" if defect_prob > 0.40 else "Good"
 
         with q_col1:
-            st.markdown(f"**Visual Appearance:**  \n`{visual_status}`")
-            purity = float(1.0 - defect_prob)
-            st.progress(purity, text=f"Surface Purity: {purity*100:.1f}%")
-            if used_mobilenet:
-                st.caption("⚡ Model: MobileNetV3 (95.7% accuracy)")
+            st.markdown(f"**External visual quality:**  \n`{visual_status}`")
+            v_conf = max(defect_prob, 1.0 - defect_prob)
+            st.progress(float(v_conf), text=f"Visual model confidence: {v_conf*100:.1f}%")
+            st.caption("Public-dataset model; Pi Camera transfer validation pending.")
 
         # Ripeness
         rip_model_path = find_latest_model(r"d:\CFRD\project\models\quality", "ripeness_classifier_*.joblib")
@@ -1059,7 +1064,7 @@ elif page == PAGES[9]:
             rip_pred = rip_obj["classes"][rip_obj["pipeline"].predict(vfeats)[0]]
             with q_col2:
                 st.markdown(f"**Ripeness Grading:**  \n`{rip_pred}`")
-                st.progress(0.85 if rip_pred == "Ripe" else 0.40, text=f"Stage: {rip_pred}")
+                st.caption("Public longitudinal dataset model.")
 
         # Variety
         var_model_path = find_latest_model(r"d:\CFRD\project\models\quality", "variety_classifier_*.joblib")
@@ -1067,95 +1072,66 @@ elif page == PAGES[9]:
             var_obj = joblib.load(var_model_path)
             var_pred = var_obj["classes"][var_obj["pipeline"].predict(vfeats)[0]].title()
             with q_col3:
-                st.markdown(f"**Predicted Cultivar:**  \n`{var_pred}`")
-                st.info(f"Variety: {var_pred}")
+                st.markdown(f"**Variety Estimate:**  \n`{var_pred}`")
+                st.caption("Public image model only; unvalidated for arbitrary apples.")
+
+        # Honest note on Brix
+        st.info("ℹ️ **Brix Sweetness Module:** Attempted on public multispectral tile imagery but did not validate (R² = -1.5534, worse than mean prediction). Brix output is disabled until physical AS7265x + refractometer ground truth is collected.")
 
         # -------------------------------------------------------------
-        # Physical Weight, Calorie & Nutrition Estimation
+        # Physical Weight & Nutrition Estimation (Demonstration Input Only)
         # -------------------------------------------------------------
         st.markdown("---")
-        st.markdown("### ⚖️ Physical Weight & Nutritional Profile")
-        w_col1, w_col2, w_col3, w_col4 = st.columns(4)
+        st.markdown("### ⚖️ Weight & Nutrition Module (Demonstration Input)")
+        w_col1, w_col2, w_col3 = st.columns([2, 1, 1])
 
         with w_col1:
-            apple_weight = st.slider("Measured Weight (grams)", 100, 300, 182, 5, help="Simulates input from connected HX711 load-cell scale")
+            apple_weight = st.slider("Demonstration Mass Input (grams)", 100, 300, 182, 5, help="Simulates manual input or connected HX711 load-cell scale")
         
-        cal_val = int(round(apple_weight * 0.52))  # 52 kcal / 100g
+        cal_val = int(round(apple_weight * 0.52))  # 52 kcal / 100g USDA
         carb_val = round(apple_weight * 0.138, 1)  # 13.8g / 100g
         fiber_val = round(apple_weight * 0.024, 1) # 2.4g / 100g
-        brix_val = 12.8 if rip_pred == "Ripe" else (11.2 if rip_pred == "Under-ripe" else 13.5)
 
         with w_col2:
-            st.metric("Estimated Calories", f"{cal_val} kcal", "Standard USDA")
+            st.metric("Estimated Calories", f"{cal_val} kcal", "USDA 52 kcal/100g")
         with w_col3:
-            st.metric("Total Carbohydrates", f"{carb_val} g", f"Fiber: {fiber_val} g")
-        with w_col4:
-            st.metric("Estimated Sweetness", f"{brix_val:.1f} °Bx", "Brix Sugar Index")
+            st.metric("Estimated Carbs / Fiber", f"{carb_val}g / {fiber_val}g", "Generic Reference")
+        st.caption("Estimated calories: based on mass × generic nutrition reference. Demonstration estimate only, not a chemical or nutritional measurement.")
 
         # -------------------------------------------------------------
-        # Chemical Screening & Consumer Safety Advisory Tier
+        # Selective Inference Reporting (Full Integrity & Exact Numbers)
         # -------------------------------------------------------------
         st.markdown("---")
-        st.markdown("### 🛡️ Consumer Actionable Safety Advisory")
-
-        # Advisory logic based on prediction & confidence
-        if pred_class == 0:
-            chem_index = max(12.0, (1.0 - confidence) * 35.0)
-            advisory_box = f"""
-            <div style="background-color:#1b5e20; border-left:6px solid #4caf50; padding:15px; border-radius:6px; color:#ffffff;">
-                <h4 style="margin:0 0 8px 0; color:#e8f5e9;">🟢 TIER 1: STANDARD / LOW SURFACE CHEMICAL PROFILE (Index: {chem_index:.1f}%)</h4>
-                <p style="margin:0; font-size:15px;"><strong>Consumer Guidance:</strong> Safe for consumption following standard tap-water rinse. Surface optical signature indicates clean control or post-wash baseline.</p>
-                <small style="color:#c8e6c9;">Model Confidence: {confidence*100:.1f}% | High-Precision Tier Accuracy: 89.9%</small>
-            </div>
-            """
-        elif pred_class == 1:
-            chem_index = 45.0 + (confidence * 25.0)
-            advisory_box = f"""
-            <div style="background-color:#f57f17; border-left:6px solid #ffb300; padding:15px; border-radius:6px; color:#ffffff;">
-                <h4 style="margin:0 0 8px 0; color:#fffde7;">🟡 TIER 2: MODERATE SURFACE TREATMENT DETECTED (Index: {chem_index:.1f}%)</h4>
-                <p style="margin:0; font-size:15px;"><strong>Consumer Guidance:</strong> Recommended 30-second wash in water with 1% baking soda (sodium bicarbonate) or peel before eating. Mild formulation residue detected on outer cuticle.</p>
-                <small style="color:#fff9c4;">Model Confidence: {confidence*100:.1f}% | OOD Distance: {ood_dist:.2f}</small>
-            </div>
-            """
-        else:
-            chem_index = 70.0 + (confidence * 25.0)
-            advisory_box = f"""
-            <div style="background-color:#b71c1c; border-left:6px solid #f44336; padding:15px; border-radius:6px; color:#ffffff;">
-                <h4 style="margin:0 0 8px 0; color:#ffebee;">🔴 TIER 3: ELEVATED CHEMICAL SURFACE SIGNATURE (Index: {chem_index:.1f}%)</h4>
-                <p style="margin:0; font-size:15px;"><strong>Consumer Guidance:</strong> ⚠️ Caution: Elevated chemical signature detected. Thoroughly scrub with warm water, peel outer skin completely, or refer sample for laboratory verification.</p>
-                <small style="color:#ffcdd2;">Model Confidence: {confidence*100:.1f}% | OOD Distance: {ood_dist:.2f}</small>
-            </div>
-            """
-
-        st.markdown(advisory_box, unsafe_allow_html=True)
+        st.markdown("### 📊 Selective Inference & Verification Protocol")
+        st.markdown("""
+        <div class="info-box">
+        <strong>Selective Synthetic Inference (Generated 20-Fruit Simulation Dataset):</strong><br>
+        The treatment-condition model is evaluated using selective confidence thresholding to discard ambiguous scans:
+        <ul>
+          <li><strong>0.50 Threshold:</strong> 69.49% accepted ordinary accuracy | 69.35% accepted balanced accuracy | 98.33% coverage (1.67% rejection)</li>
+          <li><strong>0.70 Threshold:</strong> 71.81% accepted ordinary accuracy | 71.36% accepted balanced accuracy | 78.33% coverage (21.67% rejection)</li>
+          <li><strong>0.80 Threshold:</strong> 74.17% accepted ordinary accuracy | 73.41% accepted balanced accuracy | 62.92% coverage (37.08% rejection)</li>
+          <li><strong>0.90 Threshold:</strong> 84.69% accepted ordinary accuracy | 78.27% accepted balanced accuracy | 40.83% coverage (59.17% rejection)</li>
+          <li><strong>0.95 Threshold:</strong> <strong>89.86% accepted ordinary accuracy</strong> | <strong>86.54% accepted balanced accuracy</strong> | <strong>28.75% coverage</strong> | <strong>71.25% rejection rate</strong></li>
+        </ul>
+        <em>Notice: On the generated synthetic dataset, the model reaches 86.54% accepted-scan balanced accuracy (89.86% ordinary accuracy) only after rejecting 71.25% of borderline scans. This is a selective synthetic evaluation, not an 85%+ general product performance.</em>
+        </div>
+        """, unsafe_allow_html=True)
 
         # -------------------------------------------------------------
-        # How to Achieve 85%+ Accuracy (Teacher / Engineering Note)
-        # -------------------------------------------------------------
-        st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("🎯 How This Pipeline Achieves 85%+ Accuracy in Practical Deployment", expanded=True):
-            st.markdown("""
-            1. **Selective Confidence Gating (The 89.9% Strategy):**
-               In industrial grading lines and consumer products, borderline ambiguous scans are sent to *"Please re-scan"*.
-               By enforcing a confidence threshold $\\tau \\ge 0.90$, our model's accuracy jumps from **69.2% to 89.9%**!
-            2. **Binary Formulation Discrimination:**
-               When separating clean control apples from high-dose treatments (like Nativo), the model achieves **97.5% accuracy**!
-            3. **Multi-Sensor Spatial Averaging:**
-               Taking 3 scans per apple (stem, equator, calyx) reduces physical optical noise by $\\sqrt{3} \\approx 1.73\\times$.
-            4. **Dual-Modal Confirmation:**
-               Pairing the 18-channel AS7265x optical sensor with MobileNetV3 visual quality (**95.67% accuracy**) catches both physical rot and chemical anomalies.
-            """)
-
         # Teacher explanation note
+        # -------------------------------------------------------------
         st.markdown("""
         <div class="success-box">
         🎓 <strong>How to explain this test to your teachers / evaluators:</strong><br>
         1. <em>"Because the physical AS7265x sensor is on order, we built a virtual sensor bridge using
         real apple hyperspectral reflectance priors to simulate the 18 channel outputs."</em><br>
         2. <em>"The 18 channels feed directly into our trained PCA+LDA GroupKFold pipeline, achieving 69% 3-class accuracy
-        and up to 90% accuracy with selective confidence thresholding."</em><br>
+        and up to 86.5% balanced accuracy with selective confidence thresholding (rejecting 71.2% of borderline scans)."</em><br>
         3. <em>"Notice how moving the noise or placement sliders simulates real hardware imperfections,
-        demonstrating our model's robustness and selective rejection logic."</em>
+        demonstrating our model's robustness and selective rejection logic."</em><br>
+        4. <em>"We strictly separate synthetic condition classification from consumer food safety. Laboratory LC-MS/MS validation is required before any physical pesticide claims can be made."</em>
         </div>
         """, unsafe_allow_html=True)
+
 
