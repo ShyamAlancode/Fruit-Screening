@@ -1,0 +1,37 @@
+# CFRD — Portable Multispectral AS7265x Pesticide Screening
+# Pre-hardware software demonstration — Python 3.10/3.11
+
+# Core scientific stack
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# Spectral data / hyperspectral I/O
+spectral>=0.23.1          # ENVI .bil/.hdr reader (spectral.io.envi)
+tifffile>=2023.4.12       # TIF loader (RGB previews)
+
+# Machine learning
+scikit-learn>=1.3.0       # StandardScaler, PCA, LDA, SVM, GroupKFold, LedoitWolf
+joblib>=1.3.0             # Model serialisation
+
+# Visualisation
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Dashboard
+streamlit>=1.28.0
+
+# Deep learning (camera / ripeness / variety / Brix modules)
+torch>=2.0.0
+torchvision>=0.15.0
+Pillow>=10.0.0
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+tabulate>=0.9.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
