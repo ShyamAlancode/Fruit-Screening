@@ -35,13 +35,14 @@ from constants import (
     SPECTROFOOD_18CH_PATH,
     OOD_EXPERIMENT_LABEL,
     DISCLAIMER_BANNER,
+    REPORTS_DIR,
+    FIGURES_DIR,
+    TABLES_DIR,
+    MODELS_DIR,
 )
 from ood import MahalanobisOOD, run_domain_shift_test
 
-REPORTS_DIR = r"d:\CFRD\project\reports"
-FIGURES_DIR = r"d:\CFRD\project\reports\figures"
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
-MODELS_DIR = r"d:\CFRD\project\models\treatment_condition"
+MODELS_DIR_TC = os.path.join(MODELS_DIR, "treatment_condition")
 
 
 def find_latest_model(models_dir: str):
@@ -75,7 +76,7 @@ def main():
     X_ood = X_ood_raw / np.percentile(X_ood_raw, 98)
 
     # Load latest trained classifier
-    model_path = find_latest_model(MODELS_DIR)
+    model_path = find_latest_model(MODELS_DIR_TC)
     if not model_path:
         print("ERROR: No trained model found. Run scripts/04_train_baseline_3class.py first.")
         sys.exit(1)

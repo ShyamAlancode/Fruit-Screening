@@ -232,10 +232,15 @@ def run_verification() -> bool:
     for bil in bil_files:
         hdr = bil.with_suffix(".hdr")
         if not hdr.exists():
-            # Also try same name but different case
-            hdr_upper = bil.parent / (bil.stem + ".HDR")
-            if not hdr_upper.exists():
-                missing_hdr.append(bil)
+            hdr_plus = bil.parent / (bil.name + ".hdr")
+            if hdr_plus.exists():
+                hdr = hdr_plus
+            else:
+                hdr_upper = bil.parent / (bil.stem + ".HDR")
+                if hdr_upper.exists():
+                    hdr = hdr_upper
+                else:
+                    missing_hdr.append(bil)
 
     if missing_hdr:
         print(f"  WARNING — {len(missing_hdr)} .bil files have no companion .hdr:")
@@ -338,6 +343,8 @@ def run_verification() -> bool:
 
     for bil_path in bil_files[:10]:
         hdr_path = bil_path.with_suffix(".hdr")
+        if not hdr_path.exists():
+            hdr_path = bil_path.parent / (bil_path.name + ".hdr")
         if not hdr_path.exists():
             continue
         hdr_data = parse_hdr_file(hdr_path)

@@ -34,14 +34,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from constants import (
     CHANNEL_COLS, SYNTHETIC_CSV_PATH, RANDOM_SEED,
     PCA_N_COMPONENTS, GROUPKFOLD_N_SPLITS,
-    SYNTHETIC_LABEL, DISCLAIMER_BANNER,
+    SYNTHETIC_LABEL, DISCLAIMER_BANNER, TABLES_DIR,
 )
 from training import (
     build_lda_pipeline, build_svm_pipeline,
     run_group_kfold, format_fold_table,
 )
-
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
 
 # ---------------------------------------------------------------------------
 # Task definitions

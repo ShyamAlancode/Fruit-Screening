@@ -35,11 +35,12 @@ from constants import (
     assert_no_forbidden_terms,
     SYNTHETIC_CSV_PATH,
     SPECTROFOOD_18CH_PATH,
+    REPORTS_DIR,
+    FIGURES_DIR,
+    TABLES_DIR,
 )
 
-REPORT_OUTPUT = r"d:\CFRD\project\reports\teacher_demo_report.md"
-FIGURES_DIR = r"d:\CFRD\project\reports\figures"
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
+REPORT_OUTPUT = os.path.join(REPORTS_DIR, "teacher_demo_report.md")
 
 
 def get_latest_figure(pattern: str) -> str:

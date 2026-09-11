@@ -10,10 +10,9 @@ import pandas as pd
 import numpy as np
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from constants import CHANNEL_COLS, REQUIRED_META_COLS, REQUIRED_CSV_COLS, N_CHANNELS
+from constants import CHANNEL_COLS, REQUIRED_META_COLS, REQUIRED_CSV_COLS, N_CHANNELS, SYNTHETIC_CSV_PATH
 
-
-SYNTHETIC_CSV = r"d:\CFRD\project\data\pesticide_screening\roomi_synthetic_18ch\synthetic_as7265x_roomi_apples.csv"
+SYNTHETIC_CSV = SYNTHETIC_CSV_PATH
 
 
 # ---------------------------------------------------------------------------

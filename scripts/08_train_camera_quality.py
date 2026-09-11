@@ -43,11 +43,12 @@ from constants import (
     CAMERA_OUTPUT_LABEL,
     DISCLAIMER_BANNER,
     RANDOM_SEED,
+    MODELS_DIR,
+    FIGURES_DIR,
+    TABLES_DIR,
 )
 
-MODELS_DIR = r"d:\CFRD\project\models\camera"
-FIGURES_DIR = r"d:\CFRD\project\reports\figures"
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
+MODELS_DIR_CAM = os.path.join(MODELS_DIR, "camera")
 
 
 class AppleImageDataset(Dataset):
@@ -219,7 +220,7 @@ def main():
     print("=" * 60)
 
     # Save model weights
-    save_path = os.path.join(MODELS_DIR, "camera_quality_mobilenet.pth")
+    save_path = os.path.join(MODELS_DIR_CAM, "camera_quality_mobilenet.pth")
     torch.save({
         "model_state_dict": model.state_dict(),
         "classes": ["Good", "Possible defect"],

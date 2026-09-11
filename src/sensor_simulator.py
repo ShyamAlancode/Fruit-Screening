@@ -21,7 +21,7 @@ from typing import Optional
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 from constants import (
-    N_CHANNELS, SIM_EPSILON, SIMULATOR_NOTE,
+    N_CHANNELS, SIM_EPSILON, SIMULATOR_NOTE, RANDOM_SEED,
     SIM_DARK_OFFSET_DEFAULT, SIM_READ_NOISE_DEFAULT,
     SIM_LED_SCALE_DEFAULT, SIM_GAIN_DEFAULT,
     SIM_PLACEMENT_DEFAULT, SIM_DRIFT_DEFAULT,
@@ -85,43 +85,46 @@ def simulate_scan(
         saturated  : bool — True if any channel hit saturation threshold
         params : dict — all simulation parameters used
     """
-    assert X.shape == (N_CHANNELS,), (
-        f"Input X must have shape ({N_CHANNELS},), got {X.shape}"
-    )
+    if X.shape != (N_CHANNELS,):
+        raise ValueError(
+            f"Input X must have shape ({N_CHANNELS},), got {X.shape}"
+        )
 
     if rng is None:
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(RANDOM_SEED)
 
     if white_ref is None:
         white_ref = np.ones(N_CHANNELS)
     else:
-        assert white_ref.shape == (N_CHANNELS,), (
-            f"white_ref must have shape ({N_CHANNELS},), got {white_ref.shape}"
-        )
+        if white_ref.shape != (N_CHANNELS,):
+            raise ValueError(
+                f"white_ref must have shape ({N_CHANNELS},), got {white_ref.shape}"
+            )
 
     # Per-channel LED drift direction (sampled once per scan, fixed per channel)
     delta = rng.uniform(-1.0, 1.0, N_CHANNELS)
 
     # -----------------------------------------------------------------------
     # Dark reference: sensor readout with light source off
-    # D_k = dark_offset + noise
+    # D_k = dark_offset + noise (counts physically non-negative)
     # -----------------------------------------------------------------------
-    D = dark_offset + rng.normal(0.0, read_noise_std, N_CHANNELS)
+    D = np.maximum(dark_offset + rng.normal(0.0, read_noise_std, N_CHANNELS), 0.0)
 
     # -----------------------------------------------------------------------
     # White reference: scan of Teflon / Spectralon panel
-    # W_k = dark_offset + led_scale * white_ref_k + noise
+    # W_k = dark_offset + led_scale * white_ref_k + noise (counts physically non-negative)
     # -----------------------------------------------------------------------
-    W = dark_offset + led_scale * white_ref + rng.normal(0.0, read_noise_std, N_CHANNELS)
+    W = np.maximum(dark_offset + led_scale * white_ref + rng.normal(0.0, read_noise_std, N_CHANNELS), 0.0)
 
     # -----------------------------------------------------------------------
     # Raw fruit scan: apple reflectance with all degradation applied
     # S_k = dark_offset + led_scale * gain * placement * (1 + drift * delta_k) * X_k + noise
     # -----------------------------------------------------------------------
-    S = (
+    S = np.maximum(
         dark_offset
         + led_scale * gain * placement_scale * (1.0 + led_drift * delta) * X
-        + rng.normal(0.0, read_noise_std, N_CHANNELS)
+        + rng.normal(0.0, read_noise_std, N_CHANNELS),
+        0.0,
     )
 
     # -----------------------------------------------------------------------
@@ -185,9 +188,10 @@ def simulate_batch(
     -------
     np.ndarray, shape (N, 18) — calibrated reflectance for each scan.
     """
-    assert X_batch.ndim == 2 and X_batch.shape[1] == N_CHANNELS, (
-        f"X_batch must have shape (N, {N_CHANNELS}), got {X_batch.shape}"
-    )
+    if not (X_batch.ndim == 2 and X_batch.shape[1] == N_CHANNELS):
+        raise ValueError(
+            f"X_batch must have shape (N, {N_CHANNELS}), got {X_batch.shape}"
+        )
 
     rng = np.random.default_rng(seed)
     results = np.zeros_like(X_batch, dtype=float)

@@ -40,11 +40,14 @@ from constants import (
     SYNTHETIC_LABEL,
     SPECTROFOOD_18CH_PATH,
     SYNTHETIC_CSV_PATH,
+    MODELS_DIR,
+    DATA_DIR,
+    GOOD_BAD_ROOT,
 )
 from ood import MahalanobisOOD
 
-MODELS_DIR_TREATMENT = r"d:\CFRD\project\models\treatment_condition"
-MODELS_DIR_QUALITY = r"d:\CFRD\project\models\quality"
+MODELS_DIR_TREATMENT = os.path.join(MODELS_DIR, "treatment_condition")
+MODELS_DIR_QUALITY = os.path.join(MODELS_DIR, "quality")
 
 
 def find_latest_model(folder: str, pattern: str = "*.joblib"):
@@ -133,7 +136,7 @@ def test_apple(image_path: str):
         # -------------------------------------------------------------
         # 1. External Visual Quality (Defect Analysis)
         # -------------------------------------------------------------
-        mobilenet_path = r"d:\CFRD\project\models\camera\camera_quality_mobilenet.pth"
+        mobilenet_path = os.path.join(MODELS_DIR, "camera", "camera_quality_mobilenet.pth")
         used_mobilenet = False
         if TORCH_AVAILABLE and os.path.exists(mobilenet_path):
             try:
@@ -269,12 +272,18 @@ if __name__ == "__main__":
     # Default to sample if not provided
     img_path = args.image
     if not img_path:
-        good_folder = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Good and bad classification of apple\Good_"
-        files = [os.path.join(good_folder, f) for f in os.listdir(good_folder) if f.lower().endswith(('.jpg', '.png'))]
-        if files:
-            img_path = files[0]
-            print(f"No --image provided. Using sample: {os.path.basename(img_path)}")
+        bundled_img = os.path.join(DATA_DIR, "test_user_apple.jpg")
+        if os.path.exists(bundled_img):
+            img_path = bundled_img
+            print(f"No --image provided. Using bundled test sample: {os.path.basename(img_path)}")
         else:
+            good_folder = os.path.join(GOOD_BAD_ROOT, "Good_")
+            if os.path.exists(good_folder):
+                files = [os.path.join(good_folder, f) for f in os.listdir(good_folder) if f.lower().endswith(('.jpg', '.png'))]
+                if files:
+                    img_path = files[0]
+                    print(f"No --image provided. Using sample: {os.path.basename(img_path)}")
+        if not img_path:
             print("ERROR: No sample image found.")
             sys.exit(1)
 

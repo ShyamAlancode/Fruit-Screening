@@ -50,12 +50,14 @@ from constants import (
     RIPENESS_ROOT,
     DISCLAIMER_BANNER,
     RANDOM_SEED,
+    MODELS_DIR as _MODELS_DIR_BASE,
+    FIGURES_DIR,
+    TABLES_DIR,
+    DATA_DIR,
 )
 
-MODELS_DIR = r"d:\CFRD\project\models\quality"
-FIGURES_DIR = r"d:\CFRD\project\reports\figures"
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
-CACHE_PATH = r"d:\CFRD\project\data\quality\ripeness_variety_features.csv"
+MODELS_DIR = os.path.join(_MODELS_DIR_BASE, "quality")
+CACHE_PATH = os.path.join(DATA_DIR, "quality", "ripeness_variety_features.csv")
 
 VARIETIES = [
     "kinnaur",

@@ -36,25 +36,28 @@ from constants import (
     CHANNEL_COLS, REQUIRED_META_COLS, SYNTHETIC_CSV_PATH,
     RANDOM_SEED, PCA_N_COMPONENTS, GROUPKFOLD_N_SPLITS,
     CLASS_LABELS, SYNTHETIC_LABEL, DISCLAIMER_BANNER,
+    MODELS_DIR, REPORTS_DIR, PROJECT_ROOT,
 )
 from training import (
     build_lda_pipeline, build_svm_pipeline,
     run_group_kfold, save_model, format_fold_table,
 )
 from data_validation import validate_synthetic_csv
+from ood import MahalanobisOOD
 
-REPORT_DIR    = r"d:\CFRD\project\reports"
-FIGURES_DIR   = r"d:\CFRD\project\reports\figures"
-TABLES_DIR    = r"d:\CFRD\project\reports\tables"
-MODELS_DIR    = r"d:\CFRD\project\models\treatment_condition"
-OOF_PREDS_PATH = r"d:\CFRD\project\data\pesticide_screening\roomi_synthetic_18ch\oof_predictions_3class.csv"
+REPORT_DIR    = REPORTS_DIR
+FIGURES_DIR   = os.path.join(REPORTS_DIR, "figures")
+TABLES_DIR    = os.path.join(REPORTS_DIR, "tables")
+MODELS_DIR_TC = os.path.join(MODELS_DIR, "treatment_condition")
+OOF_PREDS_PATH = os.path.join(PROJECT_ROOT, "data", "pesticide_screening",
+                               "roomi_synthetic_18ch", "oof_predictions_3class.csv")
 
 
 def main():
     print(f"\n{DISCLAIMER_BANNER}\n")
     os.makedirs(FIGURES_DIR, exist_ok=True)
     os.makedirs(TABLES_DIR, exist_ok=True)
-    os.makedirs(MODELS_DIR, exist_ok=True)
+    os.makedirs(MODELS_DIR_TC, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # ------------------------------------------------------------------
@@ -188,11 +191,29 @@ def main():
     print(f"Table saved: {table_path}")
 
     # ------------------------------------------------------------------
-    # 8. Save model (refit on full dataset)
+    # 8. Save model (refit on full dataset) + OOD scorer
     # ------------------------------------------------------------------
     final_pipeline = build_lda_pipeline(n_components=PCA_N_COMPONENTS, random_state=RANDOM_SEED)
     final_pipeline.fit(X, y)
-    save_model(final_pipeline, lda_result, MODELS_DIR, "treatment_3class_pca_lda")
+
+    # Fit OOD scorer on same training data as the final model
+    ood_scorer = MahalanobisOOD(n_pca_components=PCA_N_COMPONENTS).fit(X)
+
+    # Save both together so app.py always loads from the same snapshot
+    import joblib
+    from datetime import datetime as _dt
+    ts2 = _dt.now().strftime("%Y%m%d_%H%M%S")
+    os.makedirs(MODELS_DIR_TC, exist_ok=True)
+    payload_path = os.path.join(MODELS_DIR_TC, f"treatment_3class_pca_lda_{ts2}.joblib")
+    joblib.dump({
+        "pipeline":    final_pipeline,
+        "ood_scorer":  ood_scorer,
+        "cv_result":   lda_result,          # includes oof_preds, oof_proba
+        "saved_at":    ts2,
+        "channel_cols": CHANNEL_COLS,
+        "label":        SYNTHETIC_LABEL,
+    }, payload_path)
+    print(f"Model + OOD scorer saved: {payload_path}")
 
     print(f"\n{'='*60}")
     print(f"DONE  |  {SYNTHETIC_LABEL}")

@@ -38,6 +38,7 @@ from constants import (
     SIM_DARK_OFFSET_DEFAULT, SIM_READ_NOISE_DEFAULT,
     SIM_LED_SCALE_DEFAULT, SIM_GAIN_DEFAULT,
     SIM_PLACEMENT_DEFAULT, SIM_DRIFT_DEFAULT,
+    GOOD_BAD_ROOT, MODELS_DIR,
 )
 from sensor_simulator import simulate_scan, PARAMETER_RANGES
 
@@ -522,18 +523,29 @@ elif page == PAGES[4]:
         "Low vs High",
     ])
 
-    expected_accs = {
-        "Control vs Treated (all)": 77,
-        "Control vs Nativo fungicide formulation": 83,
-        "Control vs Monostar insecticide formulation": 82,
-        "Control vs Nativo-high formulation": 89,
-        "Control vs Monostar-high formulation": 88,
-        "Low vs High": 73,
+    # Actual 5-fold GroupKFold LDA results from binary experiment suite (scripts/05_run_binary_experiments.py)
+    # These match Section 6 of teacher_demo_report.md exactly. Do not replace with estimates.
+    actual_binary_accs = {
+        "Control vs Treated (all)": 82.5,
+        "Control vs Nativo fungicide formulation": 54.2,
+        "Control vs Monostar insecticide formulation": 87.5,
+        "Control vs Nativo-high formulation": 97.5,
+        "Control vs Monostar-high formulation": 65.8,
+        "Low vs High": 80.3,
+    }
+    actual_binary_stds = {
+        "Control vs Treated (all)": 15.4,
+        "Control vs Nativo fungicide formulation": 25.6,
+        "Control vs Monostar insecticide formulation": 13.9,
+        "Control vs Nativo-high formulation": 3.3,
+        "Control vs Monostar-high formulation": 25.6,
+        "Low vs High": 13.3,
     }
 
     st.markdown(
-        f"**Expected synthetic accuracy range for this task:** ~{expected_accs[task_name]}% "
-        f"(results vary with available fruit count)"
+        f"**Actual LDA result — 5-fold GroupKFold, 20-fruit synthetic dataset:** "
+        f"{actual_binary_accs[task_name]}% ± {actual_binary_stds[task_name]}% "
+        f"*(matches Section 6 of teacher_demo_report.md — same experiment, same numbers)*"
     )
 
     csv_exists = os.path.exists(SYNTHETIC_CSV_PATH)
@@ -555,6 +567,12 @@ elif page == PAGES[4]:
         mock_pred  = mock_proba.argmax(axis=1)
 
         sweep = run_rejection_sweep(y, mock_pred, mock_proba, verbose=False)
+
+        st.caption(
+            "⚠ Illustrative simulation only — these curves use random Dirichlet "
+            "confidence scores, not the trained model's OOF predictions. "
+            "Real OOF-based curves will appear after next model retrain saves oof_proba."
+        )
 
         cov   = [r["coverage_pct"] for r in sweep]
         bal   = [r["accepted_balanced_accuracy_pct"] for r in sweep]
@@ -801,15 +819,17 @@ This is why our 65% benchmark is harder than a naively computed 80%+ result.
 For context:
 - Random chance on 3 classes = 33%
 - An overfit model (leaky split) might report 80-90%, but that's meaningless
-- Our 65% uses strict fruit-wise GroupKFold with only ~10 independent physical apples
+- Our 65% uses strict fruit-wise GroupKFold across 20 hand-authored synthetic fruits
 
-The fact we get above chance on a leakage-free split suggests:
-- Treatment-condition signal IS present in the 18-channel simulated vectors
-- The signal survives compression from 141 bands → 18 channels
-- The AS7265x may have enough spectral discrimination for this task
+Getting above chance on a leakage-free split on a 20-fruit synthetic dataset means:
+- The mathematical simulation pipeline functions correctly
+- The Gaussian channel integration does not destroy all discriminating structure in these 20 hand-authored spectra
+- It is consistent with (but does not confirm) the AS7265x having useful discrimination on real fruit
+
+Whether a real chemical signal from pesticide treatment survives into 18 discrete channels on a physical AS7265x is an open empirical question answered only by hardware measurement.
 
 But 65% on synthetic data is a proof-of-concept, not a product claim.
-When real hardware data arrives (minimum 100+ independent apples), we will
+When real hardware data arrives (30–50 independent apples per class is the GO/NO-GO gate), we will
 retrain and report the true device accuracy.
         """,
         "6. What happens when hardware arrives?": """
@@ -871,11 +891,17 @@ elif page == PAGES[9]:
 
     col_input, col_sim = st.columns([1, 1])
 
-    # Pre-select sample paths from existing disk datasets
-    samples_dir_good = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Good and bad classification of apple\Good_"
-    samples_dir_bad  = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Good and bad classification of apple\Bad"
-    sample_files_good = [os.path.join(samples_dir_good, f) for f in os.listdir(samples_dir_good) if f.lower().endswith(('.jpg', '.png'))][:5]
-    sample_files_bad  = [os.path.join(samples_dir_bad, f) for f in os.listdir(samples_dir_bad) if f.lower().endswith(('.jpg', '.png'))][:5]
+    # Safe image listing — gracefully returns [] if directory doesn't exist
+    def _list_images(dir_path, limit=5):
+        if not os.path.isdir(dir_path):
+            return []
+        return [os.path.join(dir_path, f) for f in os.listdir(dir_path)
+                if f.lower().endswith(('.jpg', '.png'))][:limit]
+
+    samples_dir_good = os.path.join(GOOD_BAD_ROOT, "Good_")
+    samples_dir_bad  = os.path.join(GOOD_BAD_ROOT, "Bad")
+    sample_files_good = _list_images(samples_dir_good)
+    sample_files_bad  = _list_images(samples_dir_bad)
 
     with col_input:
         st.markdown("### 1. Select or Upload Demonstration Apple Image")
@@ -903,7 +929,7 @@ elif page == PAGES[9]:
                 sample_name = os.path.basename(chosen_path)
 
         if selected_image is not None:
-            st.image(selected_image, caption=f"Target Demonstration Image: {sample_name}", use_column_width=True)
+            st.image(selected_image, caption=f"Target Demonstration Image: {sample_name}", use_container_width=True)
 
     with col_sim:
         st.markdown("### 2. Virtual Hardware Simulation Controls")
@@ -938,7 +964,7 @@ elif page == PAGES[9]:
         # -------------------------------------------------------------
         # 1. Treatment-Condition Classifier (Synthetic Simulation)
         # -------------------------------------------------------------
-        model_path = find_latest_model(r"d:\CFRD\project\models\treatment_condition", "treatment_3class_pca_lda_*.joblib")
+        model_path = find_latest_model(os.path.join(MODELS_DIR, "treatment_condition"), "treatment_3class_pca_lda_*.joblib")
         if model_path:
             t_obj = joblib.load(model_path)
             pipeline = t_obj["pipeline"]
@@ -1019,7 +1045,7 @@ elif page == PAGES[9]:
         q_col1, q_col2, q_col3 = st.columns(3)
 
         # Visual Quality via MobileNetV3 (with heuristic fallback)
-        mobilenet_path = r"d:\CFRD\project\models\camera\camera_quality_mobilenet.pth"
+        mobilenet_path = os.path.join(MODELS_DIR, "camera", "camera_quality_mobilenet.pth")
         used_mobilenet = False
         if TORCH_AVAILABLE and os.path.exists(mobilenet_path):
             try:
@@ -1040,8 +1066,9 @@ elif page == PAGES[9]:
                 defect_prob = float(probs[1])
                 visual_status = "Possible defect" if defect_prob > 0.50 else "Good"
                 used_mobilenet = True
-            except Exception:
+            except Exception as e:
                 used_mobilenet = False
+                st.caption(f"⚠️ MobileNet model failed to load ({type(e).__name__}: {e}). Using luminance heuristic fallback.")
 
         if not used_mobilenet:
             im_arr = np.array(selected_image.resize((100, 100)).convert("RGB"), dtype=float) / 255.0
@@ -1056,10 +1083,12 @@ elif page == PAGES[9]:
             st.progress(float(v_conf), text=f"Visual model confidence: {v_conf*100:.1f}%")
             st.caption("Public-dataset model; Pi Camera transfer validation pending.")
 
+        # Compute visual features once, before either model block
+        vfeats = extract_visual_features_for_ripeness(selected_image).reshape(1, -1)
+
         # Ripeness
-        rip_model_path = find_latest_model(r"d:\CFRD\project\models\quality", "ripeness_classifier_*.joblib")
+        rip_model_path = find_latest_model(os.path.join(MODELS_DIR, "quality"), "ripeness_classifier_*.joblib")
         if rip_model_path:
-            vfeats = extract_visual_features_for_ripeness(selected_image).reshape(1, -1)
             rip_obj = joblib.load(rip_model_path)
             rip_pred = rip_obj["classes"][rip_obj["pipeline"].predict(vfeats)[0]]
             with q_col2:
@@ -1067,7 +1096,7 @@ elif page == PAGES[9]:
                 st.caption("Public longitudinal dataset model.")
 
         # Variety
-        var_model_path = find_latest_model(r"d:\CFRD\project\models\quality", "variety_classifier_*.joblib")
+        var_model_path = find_latest_model(os.path.join(MODELS_DIR, "quality"), "variety_classifier_*.joblib")
         if var_model_path:
             var_obj = joblib.load(var_model_path)
             var_pred = var_obj["classes"][var_obj["pipeline"].predict(vfeats)[0]].title()

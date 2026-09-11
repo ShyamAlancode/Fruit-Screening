@@ -27,12 +27,13 @@ from constants import (
     SYNTHETIC_LABEL,
     CONFIDENCE_THRESHOLDS,
     COVERAGE_FORMAT,
+    FIGURES_DIR,
+    TABLES_DIR,
+    DATA_DIR,
 )
 from ood import run_rejection_sweep
 
-FIGURES_DIR = r"d:\CFRD\project\reports\figures"
-TABLES_DIR = r"d:\CFRD\project\reports\tables"
-OOF_PATH = r"d:\CFRD\project\data\pesticide_screening\roomi_synthetic_18ch\oof_predictions_3class.csv"
+OOF_PATH = os.path.join(DATA_DIR, "pesticide_screening", "roomi_synthetic_18ch", "oof_predictions_3class.csv")
 
 
 def main():

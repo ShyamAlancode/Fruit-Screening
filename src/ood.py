@@ -67,7 +67,8 @@ class MahalanobisOOD:
 
     def score(self, X: np.ndarray) -> np.ndarray:
         """Return Mahalanobis distance for each row (lower = more in-distribution)."""
-        assert self.fitted_, "Call fit() before score()"
+        if not self.fitted_:
+            raise RuntimeError("Call fit() before score()")
         Z = self.scaler.transform(X)
         if self.pca:
             Z = self.pca.transform(Z)
@@ -75,7 +76,8 @@ class MahalanobisOOD:
 
     def threshold_at_percentile(self, percentile: float = 95.0) -> float:
         """Return distance threshold corresponding to given training percentile."""
-        assert self.fitted_, "Call fit() before threshold_at_percentile()"
+        if not self.fitted_:
+            raise RuntimeError("Call fit() before threshold_at_percentile()")
         return float(np.percentile(self._train_distances, percentile))
 
     def is_ood(self, X: np.ndarray, percentile: float = 95.0) -> np.ndarray:
@@ -203,7 +205,8 @@ def run_domain_shift_test(
     pipeline        : Fitted Roomi treatment-condition classifier (frozen)
     percentile      : Threshold percentile on training distance distribution
     """
-    assert ood_scorer.fitted_, "OOD scorer must be fitted on Roomi training data first"
+    if not ood_scorer.fitted_:
+        raise RuntimeError("OOD scorer must be fitted on Roomi training data first")
 
     threshold = ood_scorer.threshold_at_percentile(percentile)
     distances_in   = ood_scorer.score(X_in)

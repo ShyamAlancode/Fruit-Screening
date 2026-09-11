@@ -159,11 +159,20 @@ def test_pca_fitted_on_train_only(synthetic_df):
             np.dot(fold_pca.components_, global_components.T)
         ).max()
 
-        # Perfect cosine similarity on all components would indicate leakage
-        # (though some similarity is expected — this is a heuristic check)
+        # Shape check
         assert fold_pca.components_.shape == (5, 18), (
             f"Fold {fold_idx}: PCA components shape {fold_pca.components_.shape} "
             "is not (5, 18). Check n_components and feature count."
+        )
+
+        # Actual leakage check: fold PCA must not be identical to global PCA.
+        # If PCA were mistakenly fit on the full dataset, components would match.
+        max_component_diff = np.abs(
+            np.abs(fold_pca.components_) - np.abs(global_components)
+        ).max()
+        assert max_component_diff > 1e-6, (
+            f"Fold {fold_idx}: fold PCA components are identical to the global "
+            "PCA fit on all data — PCA was not refit per fold (data leakage)."
         )
 
 

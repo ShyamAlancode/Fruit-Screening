@@ -13,9 +13,9 @@ This project investigates whether a low-cost, portable optical sensor—the **AM
 Traditional laboratory verification relies on High-Performance Liquid Chromatography coupled with Mass Spectrometry (HPLC-MS/MS), which provides gold-standard chemical quantification down to sub-part-per-billion residue levels, but requires destructive sampling, days of turnaround time, and equipment costing £150,000+.
 
 The objective of this research software prototype is to demonstrate:
-1. **Mathematical feasibility:** Continuous hyperspectral reflectance curves can be reduced to 18 discrete Gaussian bands (410–940 nm) without losing treatment-condition cluster separation.
+1. **Mathematical feasibility:** Continuous hyperspectral reflectance curves can be mathematically reduced to 18 discrete Gaussian bands (410–940 nm). Whether this reduction preserves chemically-meaningful treatment-condition separation in real physical measurements remains an open empirical question requiring hardware validation.
 2. **Leakage-free evaluation:** Scans from the same physical apple are kept strictly in the same cross-validation fold (`GroupKFold`), preventing artificially inflated accuracies.
-3. **Selective inference:** A confidence-rejection threshold enables the device to accept only high-confidence predictions, elevating accuracy from ~69% to 90% at selective coverage.
+3. **Selective inference (on synthetic data):** On the 20-fruit synthetic dataset, a confidence-rejection threshold raises accepted-scan accuracy from ~69% to ~90% at 28.8% coverage. These figures are **not generalisation estimates** — they characterise the synthetic training distribution only.
 4. **Honest scientific boundaries:** Clear separation between synthetic condition classification, natural biological variation, and future hardware validation.
 
 ---
@@ -90,7 +90,7 @@ The primary baseline model is **StandardScaler -> PCA(5) -> Linear Discriminant 
 *Figure 1: Pooled Out-of-Fold Confusion Matrix (PCA+LDA 3-Class).*
 
 ![pca_scatter_3class_*.png](figures/pca_scatter_3class_20260908_113613.png)
-*Figure 2: 2D PCA Latent Space Visualization showing class separation.*
+*Figure 2: 2D PCA projection of the synthetic 18-channel feature space, points coloured by synthetic treatment label (0/1/2). Cluster proximity in this plot reflects structure in the 20-fruit synthetic dataset, not confirmed physical discriminability.*
 
 ---
 
@@ -107,7 +107,9 @@ To evaluate whether specific chemical formulations are easier to distinguish, 6 
 | Task 5 | High-Dose Monostar | Control vs Monostar-high | 65.8% ± 25.6% | 66.7% | 80.0% ± 24.5% |
 | Task 6 | Dose Discrimination | Low vs High Level | 80.3% ± 13.3% | 80.3% | 74.2% ± 22.3% |
 
-*Interpretation:* High-dose formulations (Task 4) separate cleanly (97.5% accuracy), whereas low-dose discrimination requires confidence rejection.
+> ⚠️ **Synthetic Data Caveat:** All 6 tasks above are evaluated on **20 hand-authored synthetic apples** (Gaussian spectral simulation). At 5-fold GroupKFold, each fold's test set contains ~4 fruits. A single misclassified fruit changes accuracy by ~25 percentage points in those folds. These figures demonstrate the mathematical pipeline structure, not generalisation to real chemical-spectral relationships.
+
+*Interpretation:* Task 4 (High-Dose Nativo vs Control) shows the largest synthetic-dataset separation (97.5%). Task 2 (Nativo Low-dose vs Control) at 54.2% — near chance — and the ±25.6% standard deviation across folds are equally important and reflect the high variance inherent to this sample size. Task 4's headline number should not be interpreted as evidence that a real AS7265x sensor will achieve 97.5% on physical apple scans.
 
 ---
 
@@ -139,7 +141,7 @@ A handheld consumer or field device should decline to make a decision when measu
 ![coverage_accuracy.png](figures/coverage_accuracy.png)
 *Figure 3: Coverage vs. Accepted Accuracy Trade-off Curve.*
 
-By rejecting 71.2% of borderline scans, the accepted-scan accuracy reaches **89.9%**, meeting the target performance needed for reliable screening.
+On the synthetic 20-fruit dataset, rejecting the 71.2% of scans where the classifier's maximum class probability is below 0.95 raises accepted-scan accuracy from 69.5% to **89.9%**. This demonstrates that a confidence gate is a valid architectural component for a selective-inference device. **It does not constitute evidence of 90% accuracy on real apple-sensor measurements.** The real 13-fruit Roomi hyperspectral dataset extracted in this study showed a broadband uniform reflectance drop across all 18 channels — a pattern consistent with moisture or surface confounds rather than a clean chemical fingerprint — and contains too few independent fruits (N=13) to train or evaluate any classifier.
 
 ---
 

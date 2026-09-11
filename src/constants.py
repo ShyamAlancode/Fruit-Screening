@@ -5,9 +5,12 @@ All configuration here is intentionally explicit and immutable.
 Nothing in this project should use magic numbers; import from here instead.
 """
 
+import os
+
 # ---------------------------------------------------------------------------
 # AS7265x Sensor Channel Specification
 # ---------------------------------------------------------------------------
+
 
 AS7265X_CENTRES_NM: list[int] = [
     410, 435, 460, 485, 510, 535,   # AS72653 — UV/Violet/Blue (channels A-F)
@@ -53,22 +56,44 @@ FORMULATION_NAMES: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# Dataset Paths (relative to project root d:\CFRD)
+# Dataset Paths (relative to project root)
 # ---------------------------------------------------------------------------
 
-DATASET_ROOT = r"d:\CFRD\DATA\Dataset"
+# DATASET_ROOT lives outside the repo — use env var override for portability
+DATASET_ROOT = os.environ.get(
+    "CFRD_DATASET_ROOT",
+    r"d:\CFRD\DATA\Dataset"   # default for the original development machine
+)
 
-ROOMI_HSI_ROOT = r"d:\CFRD\DATA\Dataset\roomi_pesticide_hsi"          # TO BE DOWNLOADED
-ROOMI_TIF_ROOT = r"d:\CFRD\DATA\Dataset\Apple-Hyperspectral images"   # RGB previews only — label reference
-SPECTROFOOD_MAT = r"d:\CFRD\DATA\Dataset\spectrofood_apple_dry_matter\Apple.mat"
-GOOD_BAD_ROOT   = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Good and bad classification of apple"
-RIPENESS_ROOT   = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Multispectral images of apples for ripeness, sweetness and variety grading [Data set]\Ripeness Grading"
-SWEETNESS_ROOT  = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Multispectral images of apples for ripeness, sweetness and variety grading [Data set]\Sweetness Grading"
-VARIETY_ROOT    = r"d:\CFRD\DATA\Dataset\hyperspectral-fruit-val\Multispectral images of apples for ripeness, sweetness and variety grading [Data set]\Variety Grading"
+ROOMI_HSI_ROOT = os.path.join(DATASET_ROOT, "roomi_pesticide_hsi")
+ROOMI_TIF_ROOT = os.path.join(DATASET_ROOT, "Apple-Hyperspectral images")
+SPECTROFOOD_MAT = os.path.join(DATASET_ROOT, "spectrofood_apple_dry_matter", "Apple.mat")
+GOOD_BAD_ROOT   = os.path.join(DATASET_ROOT, "hyperspectral-fruit-val",
+                                "Good and bad classification of apple")
+RIPENESS_ROOT   = os.path.join(DATASET_ROOT, "hyperspectral-fruit-val",
+                                "Multispectral images of apples for ripeness, sweetness and variety grading [Data set]",
+                                "Ripeness Grading")
+SWEETNESS_ROOT  = os.path.join(DATASET_ROOT, "hyperspectral-fruit-val",
+                                "Multispectral images of apples for ripeness, sweetness and variety grading [Data set]",
+                                "Sweetness Grading")
+VARIETY_ROOT    = os.path.join(DATASET_ROOT, "hyperspectral-fruit-val",
+                                "Multispectral images of apples for ripeness, sweetness and variety grading [Data set]",
+                                "Variety Grading")
 
-PROJECT_ROOT = r"d:\CFRD\project"
-SYNTHETIC_CSV_PATH  = r"d:\CFRD\project\data\pesticide_screening\roomi_synthetic_18ch\synthetic_as7265x_roomi_apples.csv"
-SPECTROFOOD_18CH_PATH = r"d:\CFRD\project\data\natural_variation\spectrofood_18ch_sim\spectrofood_apple_as7265x_18ch.csv"
+# Project-internal paths — computed relative to this file so they work on any machine
+PROJECT_ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # src/ -> project/
+DATA_DIR       = os.path.join(PROJECT_ROOT, "data")
+MODELS_DIR     = os.path.join(PROJECT_ROOT, "models")
+REPORTS_DIR    = os.path.join(PROJECT_ROOT, "reports")
+TABLES_DIR     = os.path.join(REPORTS_DIR, "tables")
+FIGURES_DIR    = os.path.join(REPORTS_DIR, "figures")
+
+SYNTHETIC_CSV_PATH    = os.path.join(DATA_DIR, "pesticide_screening",
+                                     "roomi_synthetic_18ch",
+                                     "synthetic_as7265x_roomi_apples.csv")
+SPECTROFOOD_18CH_PATH = os.path.join(DATA_DIR, "natural_variation",
+                                     "spectrofood_18ch_sim",
+                                     "spectrofood_apple_as7265x_18ch.csv")
 
 # ---------------------------------------------------------------------------
 # Model Training
@@ -130,7 +155,6 @@ FORBIDDEN_TERMS: list[str] = [
     "safe to eat",
     "unsafe",
     "edible",
-    "not edible",
     "food safety certified",
     "pesticide detected",
     "identifies pesticide",
@@ -144,16 +168,30 @@ def assert_no_forbidden_terms(text: str, context: str = "") -> None:
     """
     Raise ValueError if any forbidden term appears in text.
     Call this before writing any report file or rendering any dashboard section.
-    Skips disclaimer and forbidden terms explanation lines.
+    Skips explicit disclaimer lines and forbidden terms definitions.
     """
     for line in text.splitlines():
-        line_lower = line.lower()
-        if "disclaimer" in line_lower or "notice" in line_lower or "forbidden" in line_lower or "prohibited" in line_lower:
+        line_clean = line.strip()
+        line_lower = line_clean.lower()
+
+        # Exempt exact disclaimer banner
+        if line_clean == DISCLAIMER_BANNER.strip():
             continue
+
+        # Skip explicit disclaimer/notice headers and forbidden-terms explanation lines
+        if (
+            line_lower.startswith(("disclaimer:", "> disclaimer:", "**disclaimer:**", "> **disclaimer:**",
+                                   "notice:", "> notice:", "**notice:**", "> **notice:**",
+                                   "# forbidden", "forbidden terms", "forbidden_terms", "- forbidden"))
+            or "assert_no_forbidden_terms" in line_lower
+            or "forbidden_terms in constants" in line_lower
+        ):
+            continue
+
         found = [t for t in FORBIDDEN_TERMS if t.lower() in line_lower]
         if found:
             raise ValueError(
                 f"Forbidden term(s) found in output ({context}): {found}\n"
-                f"Offending line: {line.strip()}\n"
+                f"Offending line: {line_clean}\n"
                 "Review FORBIDDEN_TERMS in constants.py."
             )

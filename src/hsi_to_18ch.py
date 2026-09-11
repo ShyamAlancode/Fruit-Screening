@@ -51,55 +51,73 @@ from constants import (
 # When Roomi .bil files are downloaded, this module will walk their
 # structure. Adjust FOLDER_LABEL_MAP to match actual downloaded structure.
 
-FOLDER_LABEL_MAP = {
-    # Monostar (insecticide formulation)
-    ("monostar", "fresh"):  {"treatment_family": "Monostar", "level": "control",  "class_3": 0},
-    ("monostar", "low"):    {"treatment_family": "Monostar", "level": "low",       "class_3": 1},
-    ("monostar", "high"):   {"treatment_family": "Monostar", "level": "high",      "class_3": 2},
-    # Nativo (fungicide formulation)
-    ("nativo", "fresh"):    {"treatment_family": "Nativo",   "level": "control",   "class_3": 0},
-    ("nativo", "low"):      {"treatment_family": "Nativo",   "level": "low",       "class_3": 1},
-    ("nativo", "high"):     {"treatment_family": "Nativo",   "level": "high",      "class_3": 2},
-    # Alternate folder name patterns (adjust after download and inspection)
-    ("dib_applemono", None):    {"treatment_family": "Monostar", "level": "control",  "class_3": 0},
-    ("dib_applemonolow", None): {"treatment_family": "Monostar", "level": "low",      "class_3": 1},
-    ("dib_applemonohigh", None):{"treatment_family": "Monostar", "level": "high",     "class_3": 2},
-    ("dib_applenativo", None):  {"treatment_family": "Nativo",   "level": "control",  "class_3": 0},
-    ("dib_applenativolow", None):{"treatment_family": "Nativo",  "level": "low",      "class_3": 1},
-    ("dib_applenativohigh", None):{"treatment_family": "Nativo", "level": "high",     "class_3": 2},
-}
+GLOBAL_FRUIT_ID_REGISTRY: dict[str, int] = {}
+
+
+def reset_fruit_id_registry():
+    """Clear the fruit ID registry for deterministic runs."""
+    GLOBAL_FRUIT_ID_REGISTRY.clear()
 
 
 def _match_labels_from_path(filepath: Path) -> Optional[dict]:
     """
     Determine treatment label dict from the filepath.
-    Returns None if the path does not match any known pattern.
+    Supports real Roomi Zenodo 7818714 folder layouts.
+    Returns None if the path is unknown or unlabelled.
     """
     parts = [p.lower() for p in filepath.parts]
+    name = filepath.stem.lower()
 
-    for (family_key, level_key), labels in FOLDER_LABEL_MAP.items():
-        family_match = any(family_key in p for p in parts)
-        if level_key is None:
-            # Match by full folder name
-            leaf_match = any(family_key in p for p in parts)
-            if leaf_match:
-                return labels.copy()
-        elif family_match:
-            level_match = any(level_key in p for p in parts)
-            if level_match:
-                return labels.copy()
+    # Determine formulation family
+    if any("nativo" in p or "fungicide" in p for p in parts):
+        family = "Nativo"
+    elif any("mono" in p or "pesticide" in p or "insecticide" in p for p in parts):
+        family = "Monostar"
+    else:
+        return None
 
-    return None
+    # Determine treatment level & class index
+    # Explicitly check high, low, and control (fresh, pu, _f, dib)
+    if any("high" in p or "hg" in name or "_h" in name for p in parts):
+        level = "high"
+        class_3 = 2
+    elif any("low" in p or "lw" in name or "_l" in name for p in parts):
+        level = "low"
+        class_3 = 1
+    elif any("fresh" in p or "pu" in name or "_f" in name or "dib" in p for p in parts):
+        level = "control"
+        class_3 = 0
+    elif any("unknown" in p for p in parts):
+        # Known unlabelled / uncalibrated exploratory scans (e.g. pesticide_unknownconc)
+        return None
+    else:
+        raise ValueError(f"Unlabelled file in known treatment tree: {filepath}")
+
+    return {
+        "treatment_family": family,
+        "level": level,
+        "class_3": class_3,
+    }
 
 
-def _extract_fruit_id(filepath: Path) -> int:
-    """Extract integer fruit ID from filename. Returns -1 if not found."""
+def _extract_fruit_id(filepath: Path, labels: Optional[dict] = None) -> int:
+    """
+    Extract globally unique integer fruit ID based on physical apple identity.
+    Combines treatment family, level, parent folder, and local apple number.
+    Ensures zero cross-treatment collisions!
+    """
     name = filepath.stem
-    # Patterns: 1_1PU, A1_F1, MA1_F1, APP1_PU1, apple1
-    matches = re.findall(r'\d+', name)
-    if matches:
-        return int(matches[0])
-    return -1
+    digits = re.findall(r'\d+', name)
+    local_fruit = digits[0] if digits else "1"
+
+    fam = labels["treatment_family"] if labels else "Unknown"
+    lev = labels["level"] if labels else "Unknown"
+    unique_key = f"{fam}_{lev}_{filepath.parent.name}_{local_fruit}"
+
+    if unique_key not in GLOBAL_FRUIT_ID_REGISTRY:
+        GLOBAL_FRUIT_ID_REGISTRY[unique_key] = len(GLOBAL_FRUIT_ID_REGISTRY) + 1
+
+    return GLOBAL_FRUIT_ID_REGISTRY[unique_key]
 
 
 # ---------------------------------------------------------------------------
@@ -135,13 +153,17 @@ def gaussian_channel_integration(
     channels = np.zeros(len(centres), dtype=float)
 
     for k, centre in enumerate(centres):
-        # Gaussian weights
-        G = np.exp(-0.5 * ((wavelengths - centre) / sigma) ** 2)
+        # Truncate at 3*sigma to match docstring and prevent extreme edge leakage
+        mask = np.abs(wavelengths - centre) <= 3.0 * sigma
+        if not np.any(mask):
+            channels[k] = 0.0
+            continue
+        G = np.exp(-0.5 * ((wavelengths[mask] - centre) / sigma) ** 2)
         weight_sum = G.sum()
         if weight_sum < 1e-10:
             channels[k] = 0.0
         else:
-            channels[k] = float(np.dot(spectrum, G) / weight_sum)
+            channels[k] = float(np.dot(spectrum[mask], G) / weight_sum)
 
     return channels
 
@@ -301,8 +323,9 @@ def extract_all_roomi(
     -------
     pd.DataFrame with columns: fruit_id, treatment_family, level, class_3, ch_410...ch_940
     """
+    reset_fruit_id_registry()
     root = Path(roomi_root)
-    bil_files = sorted(root.rglob("*.bil"))
+    bil_files = sorted(root.rglob("*.bil"), key=lambda p: str(p.relative_to(root)).lower().replace("\\", "/"))
 
     if not bil_files:
         raise FileNotFoundError(
@@ -319,6 +342,8 @@ def extract_all_roomi(
     for bil_path in bil_files:
         hdr_path = bil_path.with_suffix(".hdr")
         if not hdr_path.exists():
+            hdr_path = bil_path.parent / (bil_path.name + ".hdr")
+        if not hdr_path.exists():
             if verbose:
                 print(f"  [SKIP] No .hdr for {bil_path.name}")
             skipped += 1
@@ -331,7 +356,7 @@ def extract_all_roomi(
             skipped += 1
             continue
 
-        fruit_id = _extract_fruit_id(bil_path)
+        fruit_id = _extract_fruit_id(bil_path, labels)
         if fruit_id < 0:
             if verbose:
                 print(f"  [SKIP] Could not extract fruit ID from: {bil_path.name}")

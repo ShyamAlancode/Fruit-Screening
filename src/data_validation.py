@@ -20,7 +20,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from constants import (
     CHANNEL_COLS, REQUIRED_META_COLS, REQUIRED_CSV_COLS,
-    CLASS_LABELS, N_CHANNELS, SYNTHETIC_CSV_PATH
+    CLASS_LABELS, N_CHANNELS, SYNTHETIC_CSV_PATH, REPORTS_DIR
 )
 
 
@@ -30,7 +30,7 @@ from constants import (
 
 def validate_synthetic_csv(
     csv_path: str = None,
-    report_dir: str = r"d:\CFRD\project\reports",
+    report_dir: str = None,
     verbose: bool = True,
 ) -> dict:
     """
@@ -51,6 +51,8 @@ def validate_synthetic_csv(
     """
     if csv_path is None:
         csv_path = SYNTHETIC_CSV_PATH
+    if report_dir is None:
+        report_dir = REPORTS_DIR
 
     result = {
         "passed": True,

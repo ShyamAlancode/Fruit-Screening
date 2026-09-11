@@ -100,14 +100,21 @@ def run_group_kfold(
     # (X should be a pure numpy array at this point, but check if caller
     #  accidentally passed a DataFrame with fruit_id column)
     if isinstance(X, pd.DataFrame):
-        assert "fruit_id" not in X.columns, (
-            "fruit_id found in feature DataFrame X. "
-            "Remove it before calling run_group_kfold. "
-            "Use X = df[CHANNEL_COLS].values"
-        )
+        if "fruit_id" in X.columns:
+            raise ValueError(
+                "fruit_id found in feature DataFrame X. "
+                "Remove it before calling run_group_kfold. "
+                "Use X = df[CHANNEL_COLS].values"
+            )
         X = X.values
 
-    n_classes = len(np.unique(y))
+    if X.ndim != 2 or X.shape[1] != len(CHANNEL_COLS):
+        raise ValueError(
+            f"Feature matrix X must have exactly {len(CHANNEL_COLS)} columns (got shape {X.shape}). "
+            f"Verify that no metadata/fruit_id leaked into X."
+        )
+
+    n_classes = int(np.max(y)) + 1
     gkf = GroupKFold(n_splits=n_splits)
 
     fold_metrics = []
@@ -125,11 +132,13 @@ def run_group_kfold(
         train_fruits = np.unique(groups[train_idx])
         test_fruits  = np.unique(groups[test_idx])
 
-        # Assert no leakage
+        # Critical safety check: must survive python -O (assert would be stripped)
         overlap = set(train_fruits) & set(test_fruits)
-        assert len(overlap) == 0, (
-            f"Fold {fold_idx}: fruit_id leakage detected: {overlap}"
-        )
+        if len(overlap) != 0:
+            raise RuntimeError(
+                f"Fold {fold_idx}: fruit_id leakage detected: {overlap}. "
+                "Check GroupKFold groups argument."
+            )
 
         if verbose:
             print(f"\nFold {fold_idx+1}/{n_splits}")
@@ -144,14 +153,16 @@ def run_group_kfold(
         pipeline.fit(X_train, y_train)
         y_pred = pipeline.predict(X_test)
 
-        # Probabilities (may not be available for all estimators)
+        # Probabilities — index by pipeline.classes_ to handle folds where
+        # a class is absent from training data (would return fewer columns)
         try:
             proba = pipeline.predict_proba(X_test)
+            for col_idx, cls in enumerate(pipeline.classes_):
+                oof_proba[test_idx, cls] = proba[:, col_idx]
         except AttributeError:
-            proba = np.zeros((len(X_test), n_classes))
+            pass  # estimator has no predict_proba; oof_proba stays zeros
 
         oof_preds[test_idx] = y_pred
-        oof_proba[test_idx] = proba
 
         acc     = accuracy_score(y_test, y_pred)
         bal_acc = balanced_accuracy_score(y_test, y_pred)
@@ -220,8 +231,7 @@ def save_model(pipeline: Pipeline, result: dict,
 
     payload = {
         "pipeline": pipeline,
-        "cv_result": {k: v for k, v in result.items()
-                      if k not in ["oof_preds", "oof_proba", "confusion"]},
+        "cv_result": result,          # full result including oof_preds, oof_proba, confusion
         "saved_at": ts,
         "channel_cols": CHANNEL_COLS,
         "label": SYNTHETIC_LABEL,
