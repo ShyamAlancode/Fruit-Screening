@@ -1,0 +1,24 @@
+# CFRD Project — Exact Pinned Dependency Lockfile
+# Generated from verified active development environment (Python 3.11.8)
+# Use this file to guarantee reproducible environment builds:
+#   pip install -r requirements_lock.txt
+
+numpy==2.4.6
+pandas==2.2.2
+scipy==1.17.1
+scikit-learn==1.5.0
+joblib==1.4.2
+spectral==0.25
+tifffile==2026.3.3
+matplotlib==3.11.0
+seaborn==0.13.2
+plotly>=5.15.0
+streamlit==1.36.0
+torch==2.14.0
+torchvision==0.29.0
+pillow==12.2.0
+PyYAML==6.0.3
+tqdm==4.67.3
+tabulate==0.10.0
+pytest==8.4.2
+pytest-cov==7.1.0

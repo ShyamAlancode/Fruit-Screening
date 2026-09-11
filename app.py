@@ -2,11 +2,11 @@
 app.py — CFRD Portable Multispectral Pesticide Screening
 Streamlit Dashboard — Pre-Hardware Software Demonstration
 
-9-page interactive dashboard for teacher demo, research explanation,
+10-page interactive dashboard for teacher demo, research explanation,
 and hardware-arrival planning.
 
 Usage:
-    cd d:\\CFRD\\project
+    cd project
     streamlit run app.py
 """
 
@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import os, sys
+import os, sys, json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
@@ -38,7 +38,7 @@ from constants import (
     SIM_DARK_OFFSET_DEFAULT, SIM_READ_NOISE_DEFAULT,
     SIM_LED_SCALE_DEFAULT, SIM_GAIN_DEFAULT,
     SIM_PLACEMENT_DEFAULT, SIM_DRIFT_DEFAULT,
-    GOOD_BAD_ROOT, MODELS_DIR,
+    GOOD_BAD_ROOT, MODELS_DIR, TABLES_DIR,
 )
 from sensor_simulator import simulate_scan, PARAMETER_RANGES
 
@@ -153,6 +153,37 @@ def Pipeline_display(X_tr, y_tr):
     ])
     pipe.fit(X_tr, y_tr)
     return pipe
+
+
+@st.cache_data
+def run_page4_cv_cached(csv_path: str):
+    """Run GroupKFold cross-validation once and cache results for interactive fold browsing (L15 fix)."""
+    df = pd.read_csv(csv_path)
+    X = df[CHANNEL_COLS].values
+    y = df["class_3"].values
+    groups = df["fruit_id"].values
+
+    from sklearn.model_selection import GroupKFold
+    from sklearn.metrics import accuracy_score
+
+    gkf = GroupKFold(n_splits=5)
+    fold_results = []
+    oof_y, oof_pred = [], []
+
+    for fold, (tr, te) in enumerate(gkf.split(X, y, groups)):
+        pipe = Pipeline_display(X[tr], y[tr])
+        pred = pipe.predict(X[te])
+        acc = accuracy_score(y[te], pred)
+        fold_results.append({
+            "Fold": fold + 1,
+            "Train Fruits": sorted([int(x) for x in np.unique(groups[tr])]),
+            "Test Fruits": sorted([int(x) for x in np.unique(groups[te])]),
+            "Accuracy": f"{acc*100:.1f}%",
+        })
+        oof_y.extend([int(x) for x in y[te]])
+        oof_pred.extend([int(x) for x in pred])
+
+    return fold_results, oof_y, oof_pred
 
 
 # ---------------------------------------------------------------------------
@@ -444,34 +475,8 @@ elif page == PAGES[3]:
     if not csv_exists:
         st.warning("Synthetic CSV not yet generated. Run Phase 1 scripts first.")
     else:
-        df = pd.read_csv(SYNTHETIC_CSV_PATH)
-        X      = df[CHANNEL_COLS].values
-        y      = df["class_3"].values
-        groups = df["fruit_id"].values
-
-        from sklearn.model_selection import GroupKFold
-        from sklearn.preprocessing import StandardScaler
-        from sklearn.decomposition import PCA
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        from sklearn.metrics import accuracy_score, confusion_matrix
-
-        # Run quick CV for display
-        gkf = GroupKFold(n_splits=5)
-        fold_results = []
-        oof_y, oof_pred = [], []
-
-        for fold, (tr, te) in enumerate(gkf.split(X, y, groups)):
-            pipe = Pipeline_display(X[tr], y[tr])
-            pred = pipe.predict(X[te])
-            acc = accuracy_score(y[te], pred)
-            fold_results.append({
-                "Fold": fold + 1,
-                "Train Fruits": sorted(np.unique(groups[tr])),
-                "Test Fruits": sorted(np.unique(groups[te])),
-                "Accuracy": f"{acc*100:.1f}%",
-            })
-            oof_y.extend(y[te])
-            oof_pred.extend(pred)
+        fold_results, oof_y, oof_pred = run_page4_cv_cached(SYNTHETIC_CSV_PATH)
+        from sklearn.metrics import confusion_matrix
 
         selected_fold = st.selectbox("Browse fold", [f"Fold {i+1}" for i in range(5)])
         fold_idx = int(selected_fold.split()[-1]) - 1
@@ -523,8 +528,8 @@ elif page == PAGES[4]:
         "Low vs High",
     ])
 
-    # Actual 5-fold GroupKFold LDA results from binary experiment suite (scripts/05_run_binary_experiments.py)
-    # These match Section 6 of teacher_demo_report.md exactly. Do not replace with estimates.
+    # Actual 5-fold GroupKFold LDA results from binary experiment suite
+    # Automatically synchronized from reports/tables/binary_results_latest.json (M5 fix)
     actual_binary_accs = {
         "Control vs Treated (all)": 82.5,
         "Control vs Nativo fungicide formulation": 54.2,
@@ -541,6 +546,18 @@ elif page == PAGES[4]:
         "Control vs Monostar-high formulation": 25.6,
         "Low vs High": 13.3,
     }
+
+    binary_json_path = os.path.join(TABLES_DIR, "binary_results_latest.json")
+    if os.path.exists(binary_json_path):
+        try:
+            with open(binary_json_path, "r", encoding="utf-8") as f:
+                bj = json.load(f)
+            if "accuracies" in bj:
+                actual_binary_accs.update(bj["accuracies"])
+            if "stds" in bj:
+                actual_binary_stds.update(bj["stds"])
+        except Exception:
+            pass
 
     st.markdown(
         f"**Actual LDA result — 5-fold GroupKFold, 20-fruit synthetic dataset:** "
@@ -569,9 +586,9 @@ elif page == PAGES[4]:
         sweep = run_rejection_sweep(y, mock_pred, mock_proba, verbose=False)
 
         st.caption(
-            "⚠ Illustrative simulation only — these curves use random Dirichlet "
-            "confidence scores, not the trained model's OOF predictions. "
-            "Real OOF-based curves will appear after next model retrain saves oof_proba."
+            "⚠ Illustrative simulation only — this parametric sweep illustrates the "
+            "confidence-threshold rejection mechanism. For task-specific numbers, "
+            "see the benchmark table above."
         )
 
         cov   = [r["coverage_pct"] for r in sweep]
@@ -586,7 +603,7 @@ elif page == PAGES[4]:
                         xytext=(5, 5), fontsize=7, color="#90caf9")
         ax.set_xlabel("Coverage % (accepted scans)", color="#90caf9")
         ax.set_ylabel("Balanced Accuracy % (accepted)", color="#90caf9")
-        ax.set_title(f"Coverage vs Accuracy — {task_name}\n{SYNTHETIC_LABEL}", color="#e3f2fd", fontsize=9)
+        ax.set_title(f"Coverage vs Accuracy — Illustrative Simulation (Task-Independent)\n{SYNTHETIC_LABEL}", color="#e3f2fd", fontsize=9)
         ax.tick_params(colors="#90caf9")
         ax.spines[:].set_color("#1e3a5f")
         ax.grid(alpha=0.15)
@@ -706,8 +723,8 @@ elif page == PAGES[7]:
         ("V0 — Now (Pre-Hardware)", "#1e3a5f", [
             "✅ Software simulation on public HSI datasets",
             "✅ Leakage-free GroupKFold baseline: ~65% (synthetic)",
-            "✅ 9-page Streamlit teacher demo",
-            "⏳ Roomi .bil download + real 18-ch CSV extraction",
+            "✅ 10-page Streamlit teacher demo",
+            "✅ Roomi .bil verification + real 18-ch CSV extraction complete",
         ]),
         ("V1 — Hardware Prototype (On AS7265x arrival)", "#1b5e20", [
             "[ ] Dark/white calibration pipeline on real sensor",

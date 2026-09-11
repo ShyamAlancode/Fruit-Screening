@@ -28,6 +28,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
+import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
@@ -179,9 +180,21 @@ def main():
     ]
 
     table_path = os.path.join(TABLES_DIR, f"results_binary_{ts}.md")
-    with open(table_path, "w") as f:
+    with open(table_path, "w", encoding="utf-8") as f:
         f.write("\n".join(report_lines))
     print(f"\nBinary results saved: {table_path}")
+
+    # Export latest JSON for automated dashboard alignment (M5 fix)
+    json_path = os.path.join(TABLES_DIR, "binary_results_latest.json")
+    json_payload = {
+        "accuracies": {r["Task"]: float(r["LDA_acc"].split("%")[0]) for r in summary_rows},
+        "stds": {r["Task"]: float(r["LDA_acc"].split("±")[1].replace("%", "").strip()) for r in summary_rows},
+        "timestamp": ts,
+        "source": "scripts/05_run_binary_experiments.py",
+    }
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(json_payload, f, indent=2)
+    print(f"Latest binary results JSON saved: {json_path}")
 
 
 if __name__ == "__main__":

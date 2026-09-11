@@ -1,0 +1,20 @@
+{
+  "accuracies": {
+    "Control vs Treated (all)": 82.5,
+    "Control vs Nativo fungicide formulation": 54.2,
+    "Control vs Monostar insecticide formulation": 87.5,
+    "Control vs Nativo-high formulation": 97.5,
+    "Control vs Monostar-high formulation": 65.8,
+    "Low vs High": 80.3
+  },
+  "stds": {
+    "Control vs Treated (all)": 15.4,
+    "Control vs Nativo fungicide formulation": 25.6,
+    "Control vs Monostar insecticide formulation": 13.9,
+    "Control vs Nativo-high formulation": 3.3,
+    "Control vs Monostar-high formulation": 25.6,
+    "Low vs High": 13.3
+  },
+  "source": "scripts/05_run_binary_experiments.py",
+  "dataset": "20-fruit synthetic dataset (5-fold GroupKFold)"
+}

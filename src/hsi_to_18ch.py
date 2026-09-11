@@ -415,6 +415,8 @@ def extract_spectrofood_18ch(mat_path: str, verbose: bool = True) -> pd.DataFram
     keys = [k for k in mat.keys() if k.startswith("A") and not k.startswith("__")]
 
     # Get wavelengths
+    if "Wavelengths" not in mat:
+        raise ValueError(f"Wavelengths key not found in {mat_path}. Keys present: {list(mat.keys())}")
     wl = mat["Wavelengths"].flatten().astype(float)
 
     if verbose:
@@ -423,7 +425,11 @@ def extract_spectrofood_18ch(mat_path: str, verbose: bool = True) -> pd.DataFram
     rows = []
     for key in sorted(keys):
         cube = mat[key].astype(float)   # (H, W, 141)
-        spectrum = cube.reshape(-1, cube.shape[-1]).mean(axis=0)  # (141,)
+        # Unified ROI extraction: use central circular ROI matching Roomi extraction (M6 fix)
+        if cube.ndim == 3 and cube.shape[0] > 10 and cube.shape[1] > 10:
+            spectrum = extract_roi_spectrum(cube, radius_fraction=0.4)
+        else:
+            spectrum = cube.reshape(-1, cube.shape[-1]).mean(axis=0)
         channels = gaussian_channel_integration(spectrum, wl)
         row = {"sample_id": key.strip()}
         row.update(dict(zip(CHANNEL_COLS, channels)))

@@ -20,7 +20,8 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from constants import (
     CHANNEL_COLS, REQUIRED_META_COLS, REQUIRED_CSV_COLS,
-    CLASS_LABELS, N_CHANNELS, SYNTHETIC_CSV_PATH, REPORTS_DIR
+    CLASS_LABELS, N_CHANNELS, SYNTHETIC_CSV_PATH, REPORTS_DIR,
+    TREATMENT_FAMILIES,
 )
 
 
@@ -181,7 +182,7 @@ def validate_synthetic_csv(
     # 6. treatment_family values
     # -----------------------------------------------------------------------
     _log("[CHECK] treatment_family values...")
-    valid_families = {"Monostar", "Nativo"}
+    valid_families = set(TREATMENT_FAMILIES)
     found_families = set(df["treatment_family"].unique())
     unexpected_families = found_families - valid_families
     if unexpected_families:
@@ -230,14 +231,20 @@ def validate_synthetic_csv(
     result["stats"]["max_scans_per_fruit"] = max_scans
     result["stats"]["mean_scans_per_fruit"] = round(mean_scans, 1)
 
-    # *** MANDATORY WARNING — must always be printed ***
+    # *** MANDATORY WARNING — must always be printed (L12 padded box) ***
+    box_width = 72
+    border_line = "  " + "!" * box_width
+    def _pad_box(text: str) -> str:
+        content = f"  ! {text}"
+        return content.ljust(box_width + 1) + "!"
+
     print()
-    print("  " + "!" * 66)
-    print(f"  ! MANDATORY WARNING                                              !")
-    print(f"  ! {n_rows} scan rows in this CSV do NOT equal {n_rows} independent apples.  !")
-    print(f"  ! Only {n_unique_fruits} independent fruit groups exist.                    !")
-    print(f"  ! GroupKFold MUST use fruit_id as groups, not row indices.       !")
-    print("  " + "!" * 66)
+    print(border_line)
+    print(_pad_box("MANDATORY WARNING"))
+    print(_pad_box(f"{n_rows} scan rows in this CSV do NOT equal {n_rows} independent apples."))
+    print(_pad_box(f"Only {n_unique_fruits} independent fruit groups exist."))
+    print(_pad_box("GroupKFold MUST use fruit_id as groups, not row indices."))
+    print(border_line)
     print()
 
     _log(f"Total rows:           {n_rows}")
