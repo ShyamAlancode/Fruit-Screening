@@ -1,98 +1,149 @@
-# 🍎 CFRD: Portable Multispectral Pesticide Screening & Apple Quality Analysis
+# 🍎 CFRD: Compact Food Reflectance Device — Pre-Hardware Research Prototype
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/pytest-27%2F27%20passed%20(100%25)-brightgreen.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
+[![Tests](https://img.shields.io/badge/pytest-68%2F68%20passed-brightgreen.svg)](tests/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-red.svg)](https://streamlit.io/)
 
-> **Academic & Research Notice:**  
-> **Synthetic AS7265x Simulation | Research Demonstration Only — Not a Physical Hardware Measurement | Not a Pesticide Residue or MRL Decision**  
-> *Pre-hardware software research demonstration. All results are synthetic until calibrated physical AMS AS7265x sensor hardware and accredited LC-MS/MS laboratory residue ground truth are collected.*
+> [!CAUTION]
+> **Authoritative Scientific Status (September 24, 2026 — Post-Audit)**
+>
+> This repository implements a **pre-hardware research software prototype**. Hardware (AMS AS7265x sensor triad + Raspberry Pi 5) has not yet arrived.
+>
+> **No reliable cross-apple pesticide signal has been established on the available 28-cube dataset.**
+> Physical validation with the physical sensor and LC-MS/MS chemical ground truth is required before any screening performance claim can be made.
+>
+> See [`AUDIT_CORRECTIONS.md`](AUDIT_CORRECTIONS.md) for the complete third-party audit and all corrections applied.
 
 ---
 
-## 📌 Executive Summary
+## Honest Scientific Status (September 24, 2026)
 
-This repository implements the end-to-end software pipeline for **portable multispectral pesticide screening** and **apple quality evaluation**. The system models the **AMS AS7265x 18-channel optical sensor** (spanning 410 nm to 940 nm) and couples it with modern computer vision and machine learning:
+> **This table is the authoritative source.** It supersedes all prior tables in older documents.
 
-1. **Chemical Treatment-Condition Screening**: GroupKFold cross-validated PCA + LDA / SVM classification separating control from commercial pesticide treatment conditions.
-2. **Selective Rejection & Out-Of-Distribution (OOD) Guard**: Mahalanobis distance scoring with regularized covariance to reject abnormal, scarred, or heavily damaged apples.
-3. **External Visual Quality (MobileNetV3)**: Deep transfer learning classifier diagnosing surface defects, scabs, and blemishes with **95.67% test accuracy**.
-4. **Ripeness & Cultivar Grading**: Color-moment and HSV histogram ML models tracking 18-day longitudinal maturity.
-5. **Interactive 10-Page Streamlit Dashboard**: Full GUI with live apple testing, virtual hardware noise sliders, calibration protocols, and teacher explanation mode.
-
----
-
-## 🔬 Benchmark Results Summary
-
-All models were evaluated under strict **leakage-free protocols** (physical `fruit_id` grouping in `GroupKFold`, with scaler and PCA fitting strictly confined to training folds).
-
-| Module | Model Architecture | Metric | Result | Benchmark Context |
+| Module | Dataset | Architecture | Rigorous Result | Scientific Status |
 |---|---|---|---|---|
-| **Treatment Screening** | PCA (5 components) + LDA | 3-Class Accuracy | **69.17% ± 11.59%** | Literature target: 60%–71% |
-| **Treatment Screening** | Balanced Accuracy | 3-Class Balanced Acc | **73.89%** | Macro-F1: 69.42% |
-| **High-Dose Separation** | PCA + LDA (Binary) | Control vs High Nativo | **97.50%** | Clear chemical signature separation |
-| **Selective Rejection** | Confidence Rejection Sweep | Balanced Acc @ 28.75% Coverage | **86.54%** (89.86% ord. acc) | Rejects 71.25% of borderline scans (synthetic simulation only) |
-| **OOD Anomaly Detection** | Mahalanobis Distance (LedoitWolf) | 240 SpectroFood Apples | **17.1% flagged OOD** | Safely detects foreign varieties & lighting |
-| **Visual Surface Quality** | MobileNetV3-Small (PyTorch) | 2-Class Test Accuracy | **95.67%** | Precision: 97.24%, Recall: 94.00% |
-| **Ripeness Grading** | Logistic Regression (GroupKFold) | 3-Stage Ripeness Acc | **64.07%** | Longitudinal harvest tracking |
+| **Pesticide Screening (cross-apple)** | Roomi et al. 28 cubes, LOAO | ElasticNet LR on 17 diff-features | Scan acc **75%** (max of 75 configs), median **57%**, AUROC **0.59**, p **≈0.19** | 🔴 **Not significant.** Specificity 30% (3/10 clean). Every clean ROI misclassified in pre-registered held-out test (F1 35–42%). |
+| **Pesticide Screening (intra-apple, exploratory)** | 13 fruits, GroupKFold on real extractions | PCA+LDA | 50.0% ± 10.5% | 🔴 **At chance.** All binary experiments at or below 50%. |
+| **Pesticide Screening (synthetic pipeline test)** | 240-row synthetic simulation | PCA+LDA | 69.17% ± 11.59% | 🟡 **Software smoke test only.** Not a hardware measurement. |
+| **Brix / Sweetness Regression** | 33 apples, GroupKFold | Cultivar-Aware ElasticNet | R² = −0.03, RMSE = 1.19 °Bx | 🔴 **Negative R².** 18 broad channels cannot resolve vibrational overtones. |
+| **Ripeness Grading** | 18-day storage, RGB+HSV | GroupKFold RandomForest | **64.07%** (vs 33.3% chance) | 🟢 **Effective baseline** (colour-based, not spectral). |
+| **Cultivar Classification** | 5 cultivars, GroupKFold | RandomForest on colour features | **47.54%** (vs 20% chance) | 🟡 **Moderate, colour-based.** |
+| **Visual Defect Quality** | Public apple defect dataset | MobileNetV3-Small | **95.67%** (image-level split) | 🟢 **Promising.** Fruit-level LOAO needed for field validation. |
+| **Physical Sensor Validation** | **0 physical AS7265x scans** | — | **N/A** | ⚪ **Pending hardware arrival.** |
+
+### Full Pesticide Metric Disclosure (Required by Audit)
+
+| Metric | Value |
+|---|---|
+| Scan accuracy (21/28) | 75.0% |
+| Majority-class baseline (predict-treated-always) | 64.3% |
+| Treated sensitivity (recall) | 100% (18/18) |
+| Clean specificity (recall) | **30% (3/10)** |
+| Scan-level AUROC | **0.59** |
+| Permutation p-value | **≈0.19 (not significant)** |
+| 95% Wilson CI for accuracy | **[57%, 87%]** |
+| 95% Wilson CI for specificity | **[11%, 60%]** |
+| Configurations achieving 75% | **2 of 75 tested** |
+| Median across 75 configurations | **57.1%** |
+| Pre-registered held-out test (P_MA1) | **Macro-F1 35–42%** — FAILED |
+
+> [!WARNING]
+> **The pre-registered held-out test (P_MA1) failed:** every clean ROI was misclassified
+> (confusion matrix `[[0, 50], [20, 80]]`). This result was previously not reported in the
+> README or baseline documents. It is now the primary result.
 
 ---
 
-## 📁 Repository Structure
+## What This Project Actually Demonstrates
+
+This is not a validated pesticide screening instrument. It is a research platform that:
+
+1. **Validates the data pipeline** end-to-end (HSI extraction → 18-channel simulation → GroupKFold ML → inference).
+2. **Identifies the biological baseline dilemma** quantitatively: inter-apple cuticle wax shifts reflectance > 60%, while surface pesticide residue contributes < 2% signal — this is a real physics measurement.
+3. **Implements the correct evaluation framework** (LOAO, GroupKFold, no group leakage) that the field should use but often doesn't.
+4. **Designs the hardware architecture** (PTFE reference, dark/white calibration, AS7265x UART driver, Raspberry Pi 5 edge app) ready for physical bring-up.
+
+---
+
+## Known Issues and Limitations (Audit Findings)
+
+### Critical
+- **Held-out test failed and was buried.** P_MA1 gave Macro-F1 35–42% and was not reported in prior summaries. It has since been merged back into training, invalidating the pre-registration.
+- **All simulated "hardware" data is circular.** `data/hardware/` CSVs were generated by the software driver with injected 0.5% noise. The "CV < 0.5%, PASS" result is tautological. See [`data/hardware/SIMULATOR_SMOKE_TESTS_README.md`](data/hardware/SIMULATOR_SMOKE_TESTS_README.md).
+- **Fruit identity is unresolved.** `A1` and `F_A1` may be the same physical fruit rescanned. Shutter-time differences between clean and treated scans may partially explain apparent spectral separation independent of pesticide chemistry.
+
+### Major
+- **RGB vs spectral comparison is invalid.** The RGB baseline (63.44%) uses leaky `StratifiedKFold`; spectral LOAO is 56%. The claim "spectral outperforms RGB" is retracted.
+- **Multi-spot aggregation does not fix the bias.** Averaging spots reduces random variance, not the per-apple systematic wax-baseline offset. The spatial-variance feature was never used in any model.
+- **Simulated modalities carry no independent information.** IR/UV/fluorescence channels are synthesised from the same HSI cube. 72-channel fusion results say nothing about real multi-illumination hardware.
+
+### Factual Corrections
+| Incorrect claim | Correction |
+|---|---|
+| "Specim IQ 300 bands" | Specim IQ has **204 bands**. Roomi cubes (different instrument) have 300 bands. |
+| "Ripeness >90% via sensor spectra" | The 92% is MobileNetV3 on **RGB photos** — unrelated to the sensor. Spectral result: **64%**. |
+| "`pesticide_binary.joblib` is frozen ElasticNet" | It is PCA-LDA on 26 rows at **50% (chance)**. The LOAO model is not serialised. |
+| "Brix MAE 0.84, R² 0.43" | Headline result is R² = **−0.03**. The 0.43 is best-of-12 with cultivar confounding. |
+| "ΔP > 0 on 80% of cohorts" | **2 of 5 cohorts** show positive ΔP. In F_A1, clean reflectance > treated. |
+
+---
+
+## Repository Structure
 
 ```
-├── app.py                     # 10-page interactive Streamlit dashboard
-├── requirements.txt           # Python dependencies (torch, sklearn, streamlit, etc.)
-├── pytest.ini                 # Pytest configuration
-├── README.md                  # Project documentation
+project/
+├── AUDIT_CORRECTIONS.md            ← Third-party audit corrections (authoritative)
+├── README.md                       ← This file
+├── app.py                          ← 10-page Streamlit dashboard
+├── predict.py                      ← Headless CLI predictor
+├── common.py                       ← Shared ML utilities (honest reliability strings)
+├── requirements.txt
 │
-├── src/                       # Core scientific libraries
-│   ├── constants.py           # 18-channel AS7265x definitions, disclaimers, schema
-│   ├── sensor_simulator.py    # AS7265x optical noise, drift, and gain simulator
-│   ├── calibration.py         # Dark & white reference reflectance calibration
-│   ├── hsi_to_18ch.py         # Hyperspectral cube integration to 18 channels
-│   └── ood.py                 # Mahalanobis distance out-of-distribution detector
+├── src/
+│   ├── constants.py                ← Project constants (AUDIT_HEADLINE, DATASET_IDENTITY_WARNING)
+│   ├── as7265x_driver.py           ← Hardware driver — raises RuntimeError if no hardware found
+│   ├── sensor_simulator.py         ← AS7265x optical noise simulator
+│   ├── calibration.py              ← Dark/white reference math
+│   ├── hsi_to_18ch.py              ← HSI cube → 18 channel integration
+│   ├── predictor.py                ← Unified ML inference engine
+│   ├── ood.py                      ← Mahalanobis inter-instrument domain-shift detector
+│   ├── model_registry.py           ← SHA256 model tracking
+│   └── ui_pages/                   ← Streamlit page modules
 │
-├── scripts/                   # Training, extraction, and CLI testing scripts
-│   ├── 01b_generate_synthetic_roomi_csv.py # Roomi-derived 18ch synthetic dataset
-│   ├── 03_extract_spectrofood_18ch.py      # SpectroFood 240-apple 18ch extraction
-│   ├── 04_train_baseline_3class.py         # 5-fold GroupKFold PCA+LDA baseline
-│   ├── 05_run_binary_experiments.py        # 6 binary formulation experiments
-│   ├── 06_run_coverage_experiment.py       # Confidence rejection accuracy sweep
-│   ├── 07_run_ood_experiment.py            # Cross-dataset OOD Mahalanobis validation
-│   ├── 08_train_camera_quality.py          # MobileNetV3 visual quality fine-tuning
-│   ├── 09_train_ripeness_variety.py        # Ripeness & cultivar ML training
-│   ├── 10_train_brix_regression.py         # Sweetness multispectral regression
-│   ├── 11_generate_teacher_report.py       # Markdown demonstration report generator
-│   └── test_single_apple.py                # CLI tool to test any uploaded apple photo
+├── data/
+│   ├── hardware/
+│   │   ├── SIMULATOR_SMOKE_TESTS_README.md   ← READ THIS before using any CSV here
+│   │   ├── calibrated/             ← (empty — awaiting physical hardware)
+│   │   ├── raw/                    ← (empty — awaiting physical hardware)
+│   │   └── labels/                 ← (empty — awaiting physical hardware)
+│   ├── pesticide_screening/
+│   │   ├── roomi_real_18ch/        ← Real Roomi .bil extractions (26 rows / 13 fruits)
+│   │   └── roomi_synthetic_simulation/ ← Synthetic simulation dataset (240 rows)
+│   └── quality/                    ← Ripeness, sweetness, visual quality datasets
 │
-├── models/                    # Saved model artifacts
-│   ├── camera/                # MobileNetV3 PyTorch weights (camera_quality_mobilenet.pth)
-│   ├── treatment_condition/   # Scikit-learn PCA+LDA & SVM pipelines (.joblib)
-│   └── quality/               # Ripeness and variety classifiers (.joblib)
+├── models/
+│   ├── model_manifest.json         ← SHA256 model registry
+│   ├── pesticide_binary.joblib     ← PCA-LDA at 50% (chance) — NOT the LOAO model
+│   ├── ripeness.joblib             ← 64% GroupKFold (colour-based)
+│   ├── variety.joblib              ← 47.5% GroupKFold (colour-based)
+│   └── brix.joblib                 ← R² = −14.3 (CV) — not a useful predictor
 │
-├── data/                      # Processed 18-channel CSV datasets
-│   ├── pesticide_screening/   # Roomi-derived 18-channel synthetic dataset
-│   ├── natural_variation/     # SpectroFood 18-channel variation dataset
-│   └── quality/               # Ripeness and sweetness feature tables
-│
-├── reports/                   # Academic figures and tables
-│   ├── figures/               # Confusion matrices, PCA scatter, coverage curves
-│   └── tables/                # Cross-validation performance summaries (Markdown)
-│
-└── tests/                     # Automated unit test suite (27 passing tests)
+├── reports/                        ← Machine-readable evaluation reports
+└── tests/                          ← 68 passing unit tests
+    ├── test_as7265x_driver.py
     ├── test_calibration.py
     ├── test_channel_schema.py
     ├── test_no_group_leakage.py
+    ├── test_predictor.py
     └── test_sensor_simulator.py
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Installation
+### 1. Install
 
 ```bash
 git clone https://github.com/ShyamAlancode/apple_pesticide.git
@@ -100,49 +151,79 @@ cd apple_pesticide
 pip install -r requirements.txt
 ```
 
-### 2. Launch the Interactive Dashboard
+### 2. Run Tests
+
+```bash
+pytest tests/ -v
+# Expected: 68 passed
+```
+
+### 3. Headless Inference (CLI)
+
+```bash
+# From 18-channel reflectance spectrum:
+python predict.py --spectrum "0.09,0.10,0.11,0.14,0.22,0.38,0.44,0.42,0.40,0.35,0.22,0.48,0.72,0.76,0.79,0.81,0.82,0.83"
+
+# From apple photo:
+python predict.py --image data/test_user_apple.jpg
+
+# Mock sensor scan (simulation):
+python predict.py --mock
+```
+
+### 4. Streamlit Dashboard
 
 ```bash
 streamlit run app.py
 ```
 
-Navigate through the 10 interactive pages:
-* **Page 1–3**: Sensor architecture, wavelength mapping, and dataset lineage.
-* **Page 4–5**: Model benchmarks (3-class PCA+LDA, binary experiments, coverage curves).
-* **Page 6**: Physical hardware calibration protocol (dark/white reference, UV405 crosstalk).
-* **Page 7–9**: Honest scientific limitations, product roadmap (V0 to V3), and teacher defense guide.
-* **Page 10 (`🔬 Virtual Apple Scan Demonstrator — Simulation Only`)**: Illustrative demonstration of virtual spectral response, noise/drift simulation controls, and multi-model workflow. Contains mandatory simulation disclaimers.
-
-### 3. Test Any Apple Photo via Command Line
+### 5. Reproduce ML Results
 
 ```bash
-# Test sample apple:
-python scripts/test_single_apple.py
+# Reproduce 15% real Roomi result (at-chance, correct result):
+python scripts/04_train_baseline_3class.py --dataset real
 
-# Test your own custom apple image:
-python scripts/test_single_apple.py --image "path/to/apple.jpg"
-```
-
-### 4. Run Automated Test Suite
-
-```bash
-pytest tests/ -v
-```
-Output:
-```
-============================= 27 passed in 3.18s ==============================
+# Reproduce 69% synthetic simulation result (software smoke test):
+python scripts/04_train_baseline_3class.py --dataset synthetic
 ```
 
 ---
 
-## 🛡️ Scientific Integrity & Leakage Prevention
+## Scientific Integrity Protocols
 
-1. **Zero Group Leakage:** Physical apples (`fruit_id`) are never split across train and test folds. All cross-validation uses `GroupKFold(n_splits=5, groups=fruit_id)`.
-2. **Zero Forbidden Claims:** In compliance with spectroscopic research ethics, this software strictly enforces pre-hardware disclaimer boundaries. No claims of "pesticide residue detection", "parts per million (ppm)", or "food safety/edibility certification" are made prior to accredited laboratory LC-MS/MS validation.
-3. **Out-of-Distribution Rejection:** Deformed or blemished apples with irregular optical reflectance are detected via Mahalanobis distance and safely flagged as `UNCERTAIN / REJECT SCAN`.
+1. **Zero group leakage:** `fruit_id` is never split across train/test in any CV fold.
+2. **Simulated data is permanently separated** from real extractions by directory and filename.
+3. **Reliability strings** on every model: the shipped models carry explicit `reliability` metadata stating their actual CV performance.
+4. **No hardware falsification:** `as7265x_driver.py` raises `RuntimeError` when no physical sensor is found — no silent fallback to simulation.
+5. **No unsubstantiated claims:** `FORBIDDEN_TERMS` in `src/constants.py` blocks phrases like "pesticide detected", "MRL", "safe to eat" from appearing in any report.
 
 ---
 
-## 📜 License
+## What Comes Next (Physical Validation Phase)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+When the AMS AS7265x triad arrives:
+
+1. **Repeatability test:** 20 repeated scans of PTFE reference tile under fixed conditions.
+2. **Biological variation test:** 5-spot measurements across 6 untreated supermarket apples.
+3. **Paired reference test:** Treated vs control comparison on matching fruit pairs with within-fruit referencing.
+4. **Chemical ground truth:** LC-MS/MS analysis of sprayed apples to establish actual ppm concentrations.
+
+Only after steps 1–4 will it be possible to make a scientifically defensible performance claim.
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE).
+
+---
+
+## Citation
+
+If you use this codebase in academic work, cite it as a pre-hardware research prototype and include the audit status:
+
+```
+CFRD: Compact Food Reflectance Device (Pre-Hardware Research Prototype).
+September 2026. No validated pesticide screening performance established.
+See AUDIT_CORRECTIONS.md for full scientific status.
+```

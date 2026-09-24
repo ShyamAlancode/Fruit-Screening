@@ -1,0 +1,126 @@
+{
+  "models": {
+    "treatment_3class_synthetic": {
+      "model_key": "treatment_3class_synthetic",
+      "filepath": "models\\treatment_condition\\treatment_3class_pca_lda_synthetic_20260923_082626.joblib",
+      "model_sha256": "81b4762d463aeb3cb0082427f9d580d27f9e3a2322265722fea78986f2345005",
+      "dataset_path": "data\\pesticide_screening\\roomi_synthetic_simulation\\roomi_synthetic_18ch.csv",
+      "dataset_sha256": "9cd292e00bd02bee2b0b0f71a3229c9b07370d19d410635ceab1ada4e164c748",
+      "model_type": "StandardScaler -> PCA(5) -> LDA",
+      "validation_method": "5-fold GroupKFold by fruit_id (20 fruits / 240 scans)",
+      "metrics": {
+        "mean_accuracy": 0.6916666666666667,
+        "std_accuracy": 0.11592023119369632,
+        "balanced_accuracy": 0.7388888888888888,
+        "macro_f1": 0.6942215325129675,
+        "svm_accuracy": 0.5541666666666666
+      },
+      "git_commit": "e9f3398",
+      "scientific_status": "Synthetic Simulation Pipeline Test (Synthetic construct bias; proves ML pipeline learns label shifts)",
+      "notes": "Trained via 04_train_baseline_3class.py on synthetic"
+    },
+    "treatment_3class_real": {
+      "model_key": "treatment_3class_real",
+      "filepath": "models\\treatment_condition\\treatment_3class_pca_lda_real_20260915_123548.joblib",
+      "model_sha256": "98958394f0f623000868962e3b87c3963d7a5af84f90b7bb161e26dcac5773a6",
+      "dataset_path": "data\\pesticide_screening\\roomi_real_18ch\\roomi_real_18ch.csv",
+      "dataset_sha256": "ee4e694f92fe35855fa0d86a0a67aa96c29392e7e98c37b8d16c4fe9e51e8eb5",
+      "model_type": "StandardScaler -> PCA(5) -> LDA",
+      "validation_method": "5-fold GroupKFold by fruit_id (13 fruits / 26 scans)",
+      "metrics": {
+        "mean_accuracy": 0.15,
+        "std_accuracy": 0.13333333333333333,
+        "balanced_accuracy": 0.175,
+        "macro_f1": 0.12,
+        "svm_accuracy": 0.0
+      },
+      "git_commit": "e9f3398",
+      "scientific_status": "Real Roomi Extraction Pilot (Below random chance 33.3%; sample size 13 fruits inadequate for product claim)",
+      "notes": "Trained via 04_train_baseline_3class.py on real"
+    },
+    "camera_quality_mobilenet": {
+      "model_key": "camera_quality_mobilenet",
+      "filepath": "models\\camera\\camera_quality_mobilenet.pth",
+      "model_sha256": "6f94c472d2cc85a0fa983dbd9f428c197026fdffb76527f6429598c552a52533",
+      "dataset_path": "data\\quality\\visual_quality",
+      "dataset_sha256": "",
+      "model_type": "MobileNetV3-Small (PyTorch transfer learning)",
+      "validation_method": "Train/Val/Test random split (Image-level; fruit-level grouped split required for field validation)",
+      "metrics": {
+        "test_accuracy": 0.9567,
+        "test_precision": 0.9724,
+        "test_recall": 0.94,
+        "test_macro_f1": 0.956
+      },
+      "git_commit": "e9f3398",
+      "scientific_status": "External Visual Quality Prototype (Detects surface blemishes and defects; not food safety or chemical residue certification)",
+      "notes": "Image-level split may have cross-image leakage if multiple photos of the same fruit were taken."
+    },
+    "ripeness_classifier": {
+      "model_key": "ripeness_classifier",
+      "filepath": "models\\quality\\ripeness_classifier_20260908_114045.joblib",
+      "model_sha256": "64d2a0660226739c9cbce5d3ac45b6609be0d3c097e237f0d296efbf024113f4",
+      "dataset_path": "data\\quality\\ripeness",
+      "dataset_sha256": "",
+      "model_type": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
+      "validation_method": "5-fold GroupKFold by fruit_id",
+      "metrics": {
+        "accuracy": 0.6407,
+        "balanced_accuracy": 0.6405,
+        "macro_f1": 0.6386,
+        "chance_level": 0.3333
+      },
+      "git_commit": "e9f3398",
+      "scientific_status": "Maturity Grading Model (Tracks 18-day longitudinal ripeness from color moments and HSV features)",
+      "notes": "Pre-hardware demonstration from public hyperspectral fruit dataset."
+    },
+    "variety_classifier": {
+      "model_key": "variety_classifier",
+      "filepath": "models\\quality\\variety_classifier_20260908_114045.joblib",
+      "model_sha256": "706bee8335aa0b3fd56151b31b27483820b4ce061f299e1b0a19a57250b98b09",
+      "dataset_path": "data\\quality\\variety",
+      "dataset_sha256": "",
+      "model_type": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
+      "validation_method": "5-fold GroupKFold by fruit_id",
+      "metrics": {
+        "accuracy": 0.4754,
+        "balanced_accuracy": 0.4753,
+        "macro_f1": 0.4713,
+        "chance_level": 0.2
+      },
+      "git_commit": "e9f3398",
+      "scientific_status": "Cultivar Classification Model (5-class apple cultivars from color and morphology features)",
+      "notes": "Distinguishes 5 apple cultivars with 47.54% GroupKFold accuracy (vs 20.0% random chance)."
+    },
+    "ripeness_mobilenet_v3": {
+      "model_key": "ripeness_mobilenet_v3",
+      "filepath": "models\\quality\\ripeness_mobilenet_v3.pth",
+      "dataset_path": "data\\ripeness_multistage",
+      "model_type": "MobileNetV3-Small (Fine-tuned 3-stage maturity)",
+      "validation_method": "Independent test set (408 instance crops) + External zero-shot (213 RawRipe apples)",
+      "metrics": {
+        "test_accuracy": 0.9191,
+        "test_macro_f1": 0.9183,
+        "val_accuracy": 0.9534,
+        "external_rawripe_accuracy": 0.8685,
+        "external_ripe_recall": 0.9352
+      },
+      "scientific_status": "RGB Camera Ripeness Model — UNRELATED TO AS7265x SENSOR (Audit correction Sep 24 2026)",
+      "notes": "AUDIT CORRECTION: The 92% ripeness claim refers to this MobileNetV3 on RGB orchard photos. It has nothing to do with the AS7265x sensor. The sensor-based spectral ripeness result is 64% (ripeness_classifier). Do NOT conflate these two results."
+    },
+    "pesticide_binary_shipped": {
+      "model_key": "pesticide_binary_shipped",
+      "filepath": "models/pesticide_binary.joblib",
+      "model_type": "StandardScaler -> PCA(5) -> LDA",
+      "validation_method": "26 rows, 13 fruits — GroupKFold",
+      "metrics": {
+        "accuracy": 0.5,
+        "note": "AT CHANCE (50%) — coin-flip performance"
+      },
+      "scientific_status": "AUDIT CORRECTION (Sep 24 2026): This shipped model is PCA-LDA at 50% (chance). It is NOT the 17-diff ElasticNet LOAO model. The LOAO 75% model (max-of-75-configs) is NOT serialised in this repository.",
+      "notes": "Do not present this model as the frozen LOAO ElasticNet. It is a different model at chance performance."
+    }
+  },
+  "experiments": [],
+  "audit_corrections_applied": "September 24, 2026 — see AUDIT_CORRECTIONS.md"
+}

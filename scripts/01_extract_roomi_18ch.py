@@ -13,9 +13,10 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from hsi_to_18ch import extract_all_roomi
-from constants import ROOMI_HSI_ROOT, SYNTHETIC_CSV_PATH
+from constants import ROOMI_HSI_ROOT, ROOMI_REAL_18CH_PATH
 
-OUTPUT_PATH = SYNTHETIC_CSV_PATH
+# Writes strictly to dedicated real extraction directory
+OUTPUT_PATH = ROOMI_REAL_18CH_PATH
 ROOMI_ROOT  = ROOMI_HSI_ROOT
 
 # ---------------------------------------------------------------------------

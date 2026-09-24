@@ -33,23 +33,28 @@ from constants import (
 # ---------------------------------------------------------------------------
 # Folder → label mapping
 # ---------------------------------------------------------------------------
-# Roomi folder structure after download and extraction:
+# Real Roomi .bil folder structure on disk (Zenodo 7818714):
 # roomi_pesticide_hsi/
-#   Apple_samples/
-#     Monostar/  Fresh/ Low/ High/
-#     Nativo/    Fresh/ Low/ High/
-#   Fungicide_Apple/       (Nativo high concentration samples)
-#   Insecticide_Apple/     (Monostar samples)
+#   Apple_samples/Apple_samples/
+#     Monostar/  Fresh/ (1_1PU.bil, 1_2PU.bil)
+#                High/  (1_1HG.bil, 1_2HG.bil)
+#                Low/   (1_1LW.bil, 1_2LW.bil)
+#                Unknown/fresh/ (APP1_PU1.bil, APP1_PU2.bil)
+#                Unknown/pesticide_unknownconc/ (APP1_PST1.bil, APP1_PST2.bil)
+#     Nativo/    Fresh/ (A1_F1.bil, A1_F2.bil)
+#                High/  (A1_H1.bil, A1_H2.bil)
+#                Low/   (A1_L1.bil, A1_L2.bil)
+#   Fungicide_Apple/Fungicide_Apple/
+#     DIB_Apple/          (A1_F1.bil, A1_F2.bil)
+#     DIB_AppleNativohigh/(A1_H1.bil, A1_H2.bil)
+#     DIB_AppleNativolow/ (A1_L1.bil, A1_L2.bil)
+#   Pesticide_Apple/Pesticide_Apple/
+#     DIB_Applemono/      (MA1_F1.bil, MA1_F2.bil)
+#     DIB_Applemonohigh/  (MA1_H1.bil, MA1_H2.bil)
+#     DIB_Applemonolow/   (MA1_L1.bil, MA1_L2.bil)
 #
-# The TIF folder structure that already exists on disk:
-#   Apple-Hyperspectral images/
-#     Apple_Samples/Monostar/Fresh/  Low/  High/
-#     Apple_Samples/Nativo/  Fresh/  Low/  High/
-#     Fungicide_Apple/DIB_AppleNativo/ DIB_AppleNativohigh/ DIB_AppleNativolow/
-#     Insecticide_Apple/DIB_Applemono/ DIB_Applemonohigh/ DIB_Applemonolow/
-#
-# When Roomi .bil files are downloaded, this module will walk their
-# structure. Adjust FOLDER_LABEL_MAP to match actual downloaded structure.
+# NOTE: Do NOT assume TIF naming patterns map to .bil files. The .bil files
+# follow the exact naming convention above. Label parsing matches these directly.
 
 GLOBAL_FRUIT_ID_REGISTRY: dict[str, int] = {}
 
@@ -200,6 +205,55 @@ def extract_roi_spectrum(
     return roi_pixels.mean(axis=0).astype(float)
 
 
+def generate_roi_sanity_check_image(
+    cube: np.ndarray,
+    wavelengths: np.ndarray,
+    output_path: str,
+    radius_fraction: float = 0.4,
+) -> str:
+    """
+    Generate an RGB preview from hyperspectral bands with the circular ROI overlaid.
+    Provides visual verification that the central ROI falls strictly on fruit skin/flesh
+    and does not sample background, edges, or shadows.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    r_idx = int(np.argmin(np.abs(wavelengths - 645.0)))
+    g_idx = int(np.argmin(np.abs(wavelengths - 535.0)))
+    b_idx = int(np.argmin(np.abs(wavelengths - 460.0)))
+
+    r_img = cube[:, :, r_idx].astype(float)
+    g_img = cube[:, :, g_idx].astype(float)
+    b_img = cube[:, :, b_idx].astype(float)
+
+    rgb = np.zeros((*r_img.shape, 3), dtype=float)
+    for i, ch in enumerate([r_img, g_img, b_img]):
+        p2, p98 = np.percentile(ch, (2, 98))
+        denom = (p98 - p2) if (p98 - p2) > 1e-6 else 1.0
+        rgb[:, :, i] = np.clip((ch - p2) / denom, 0.0, 1.0)
+
+    H, W = r_img.shape
+    cx, cy = W // 2, H // 2
+    radius = int(radius_fraction * min(H, W))
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.imshow(rgb)
+    circle = plt.Circle((cx, cy), radius, color="lime", fill=False, linewidth=2, linestyle="--", label=f"ROI (r={radius}px)")
+    ax.add_patch(circle)
+    ax.plot(cx, cy, "r+", markersize=10, label="Center")
+    ax.set_title(f"Visual ROI Sanity Check (radius_frac={radius_fraction})")
+    ax.axis("off")
+    ax.legend(loc="upper right", framealpha=0.8)
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
 # ---------------------------------------------------------------------------
 # ENVI .bil loader
 # ---------------------------------------------------------------------------
@@ -232,6 +286,26 @@ def load_bil_cube(
         raise ValueError(
             f"No wavelength information in header: {hdr_path}\n"
             "The .hdr file must contain a 'wavelength' list."
+        )
+
+    # Strong assertions on band count and spectral coverage
+    if cube.ndim != 3:
+        raise ValueError(
+            f"Expected 3D hyperspectral cube (lines, samples, bands), got shape {cube.shape} from {bil_path}"
+        )
+    if cube.shape[2] != len(wavelengths):
+        raise ValueError(
+            f"Strong band-count check failed: cube has {cube.shape[2]} bands, "
+            f"but header defines {len(wavelengths)} wavelengths in {hdr_path}"
+        )
+    if cube.shape[2] < 18:
+        raise ValueError(
+            f"Insufficient spectral bands: {cube.shape[2]} < 18 required for AS7265x channel integration in {bil_path}"
+        )
+    if wavelengths.min() > 420.0 or wavelengths.max() < 930.0:
+        raise ValueError(
+            f"Wavelength range [{wavelengths.min():.1f}, {wavelengths.max():.1f}] nm does not span "
+            f"the required AS7265x spectral range (410–940 nm) in {hdr_path}"
         )
 
     return np.array(cube), wavelengths

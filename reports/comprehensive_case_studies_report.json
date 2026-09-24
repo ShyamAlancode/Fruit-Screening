@@ -1,0 +1,305 @@
+{
+  "title": "CFRD Comprehensive Case Studies Evaluation & Benchmark Report",
+  "timestamp": "2026-09-23",
+  "inference_test_scenarios": {
+    "Scenario_1_Apple_Photo": {
+      "input_type": "RGB Image (data/test_user_apple.jpg)",
+      "pesticide_screening": {
+        "predicted_label": "Low-treatment-like",
+        "confidence_pct": 91.37,
+        "probabilities": {
+          "Control-like": 0.0855,
+          "Low-treatment-like": 0.9137,
+          "High-treatment-like": 0.0008
+        },
+        "ood_status": "Uncertain / Out-of-Distribution",
+        "ood_score": 12.35
+      },
+      "ripeness_stage": {
+        "predicted_stage": "Under-ripe",
+        "confidence_pct": 37.73,
+        "probabilities": {
+          "Under-ripe": 0.3773,
+          "Ripe": 0.3387,
+          "Over-ripe": 0.284
+        }
+      },
+      "variety_cultivar": {
+        "predicted_cultivar": "red delicious usa",
+        "confidence_pct": 29.03
+      },
+      "brix_sweetness": {
+        "estimated_brix": 9.41,
+        "sweetness_tier": "Low Sweetness (Tart / Early)"
+      },
+      "visual_defect": {
+        "status": "Good / Sound",
+        "defect_probability": 0.13
+      }
+    },
+    "Scenario_2_Mock_Hardware_Scan": {
+      "input_type": "AS7265x Mock Reflection Array (18 channels)",
+      "pesticide_screening": {
+        "predicted_label": "Control-like",
+        "confidence_pct": 100.0,
+        "ood_status": "Uncertain / Out-of-Distribution",
+        "ood_score": 20.97
+      },
+      "ripeness_stage": {
+        "predicted_stage": "Under-ripe",
+        "confidence_pct": 55.77
+      },
+      "variety_cultivar": {
+        "predicted_cultivar": "red delicious usa",
+        "confidence_pct": 30.45
+      },
+      "brix_sweetness": {
+        "estimated_brix": 11.78,
+        "sweetness_tier": "Medium Sweetness (Standard Market Quality)"
+      }
+    },
+    "Scenario_3_Synthetic_Control_Spectrum": {
+      "input_type": "Synthetic Control Apple (row 0, ground truth: Control)",
+      "pesticide_screening": {
+        "predicted_label": "Low-treatment-like",
+        "confidence_pct": 74.61,
+        "probabilities": {
+          "Control-like": 0.2477,
+          "Low-treatment-like": 0.7461,
+          "High-treatment-like": 0.0062
+        },
+        "ood_status": "In-Distribution",
+        "ood_score": 2.15
+      },
+      "ripeness_stage": "Under-ripe",
+      "variety_cultivar": "kinnaur",
+      "brix_sweetness": "9.84 \u00b0Bx"
+    },
+    "Scenario_4_Synthetic_High_Treatment_Spectrum": {
+      "input_type": "Synthetic High Treatment Apple (ground truth: High-treatment)",
+      "pesticide_screening": {
+        "predicted_label": "High-treatment-like",
+        "confidence_pct": 91.64,
+        "probabilities": {
+          "Control-like": 0.0023,
+          "Low-treatment-like": 0.0812,
+          "High-treatment-like": 0.9164
+        },
+        "ood_status": "In-Distribution",
+        "ood_score": 1.85
+      },
+      "ripeness_stage": "Under-ripe",
+      "variety_cultivar": "kinnaur",
+      "brix_sweetness": "8.97 \u00b0Bx"
+    },
+    "Scenario_5_Real_Roomi_HSI_Spectrum": {
+      "input_type": "Real Roomi .bil HSI Extraction (Fruit 1, untreated apple)",
+      "under_synthetic_model": {
+        "predicted_label": "Control-like",
+        "confidence_pct": 100.0,
+        "ood_status": "Uncertain / Out-of-Distribution",
+        "ood_score": 15.18
+      },
+      "under_real_model": {
+        "predicted_label": "Control-like",
+        "confidence_pct": 53.22,
+        "ood_status": "Uncertain / Out-of-Distribution"
+      },
+      "brix_sweetness": "11.47 \u00b0Bx"
+    },
+    "Scenario_6_SpectroFood_Natural_Variation": {
+      "input_type": "SpectroFood 18-Channel Natural Variation Scan (Domain Shift Target)",
+      "pesticide_screening": {
+        "predicted_label": "High-treatment-like",
+        "confidence_pct": 100.0,
+        "ood_status": "Uncertain / Out-of-Distribution",
+        "ood_score": 314657.73
+      },
+      "ripeness_stage": "Under-ripe",
+      "variety_cultivar": "kinnaur",
+      "brix_sweetness": "-32332.98 \u00b0Bx"
+    },
+    "Scenario_7_Noisy_Physical_Sensor_Simulation": {
+      "input_type": "AS7265x with 30-count dark offset, 4-count noise, 8% placement drift, 4% LED drift",
+      "pesticide_screening": {
+        "predicted_label": "Control-like",
+        "confidence_pct": 100.0,
+        "ood_status": "Uncertain / Out-of-Distribution",
+        "ood_score": 1694.91
+      },
+      "ripeness_stage": "Under-ripe",
+      "variety_cultivar": "kinnaur",
+      "brix_sweetness": "4.51 \u00b0Bx"
+    }
+  },
+  "case_studies_benchmarks": {
+    "treatment_screening_synthetic": {
+      "name": "Synthetic Treatment-Condition 3-Class Benchmark",
+      "dataset": "data/pesticide_screening/roomi_synthetic_simulation/roomi_synthetic_18ch.csv",
+      "dataset_sha256": "9cd292e00bd02bee2b0b0f71a3229c9b07370d19d410635ceab1ada4e164c748",
+      "n_fruits": 20,
+      "n_rows": 240,
+      "validation": "5-fold GroupKFold by fruit_id",
+      "pipeline": "StandardScaler -> PCA(5) -> LDA",
+      "metrics": {
+        "mean_accuracy": 0.6917,
+        "std_accuracy": 0.1159,
+        "balanced_accuracy": 0.7389,
+        "macro_f1": 0.6942,
+        "svm_accuracy": 0.5542,
+        "control_vs_nativo_high": 0.975,
+        "selective_rejection_bal_acc": 0.8654,
+        "selective_rejection_coverage": 0.2875
+      },
+      "scientific_status": "Synthetic Simulation Proof-of-Pipeline (Synthetic construct bias; proves ML pipeline can learn artificial label shifts; NOT proof of physical sensor detection)",
+      "date": "2026-09-11"
+    },
+    "treatment_screening_real": {
+      "name": "Real Roomi .bil Cube Extraction 3-Class Benchmark",
+      "dataset": "data/pesticide_screening/roomi_real_18ch/roomi_real_18ch.csv",
+      "dataset_sha256": "ee4e694f92fe35855fa0d86a0a67aa96c29392e7e98c37b8d16c4fe9e51e8eb5",
+      "n_fruits": 13,
+      "n_rows": 26,
+      "validation": "5-fold GroupKFold by fruit_id (~2-3 fruits per test fold)",
+      "pipeline": "StandardScaler -> PCA(5) -> LDA",
+      "metrics": {
+        "mean_accuracy": 0.15,
+        "std_accuracy": 0.1333,
+        "balanced_accuracy": 0.175,
+        "macro_f1": 0.12,
+        "svm_accuracy": 0.0,
+        "chance_level": 0.3333
+      },
+      "scientific_status": "Real Extraction Reality (Below 33.3% random chance; current 18-channel extraction and sample size do not establish treatment-condition signal)",
+      "date": "2026-09-12"
+    },
+    "binary_treatment_real": {
+      "name": "Real Roomi Binary Treatment Formulation Experiments",
+      "dataset": "data/pesticide_screening/roomi_real_18ch/roomi_real_18ch.csv",
+      "n_fruits": 13,
+      "n_rows": 26,
+      "validation": "5-fold GroupKFold by fruit_id",
+      "tasks": {
+        "Control vs Treated (all)": {
+          "accuracy": 50.0,
+          "std": 10.5
+        },
+        "Control vs Nativo": {
+          "accuracy": 40.0,
+          "std": 37.4
+        },
+        "Control vs Monostar": {
+          "accuracy": 45.0,
+          "std": 45.8
+        },
+        "Control vs Nativo-high": {
+          "accuracy": 37.5,
+          "std": 41.5
+        },
+        "Control vs Monostar-high": {
+          "accuracy": 20.0,
+          "std": 24.5
+        },
+        "Low vs High treatment level": {
+          "accuracy": 20.0,
+          "std": 29.2
+        }
+      },
+      "scientific_status": "Highly unstable (large standard deviations up to \u00b145.8%; 13 physical fruits is fundamentally inadequate for binary product claims)",
+      "date": "2026-09-12"
+    },
+    "ood_domain_shift_stress_test": {
+      "name": "Cross-Dataset Domain Shift Stress Test (Roomi vs SpectroFood)",
+      "in_distribution": "Roomi extraction (26 samples)",
+      "out_of_distribution": "SpectroFood apple scans (240 samples)",
+      "method": "Mahalanobis distance with LedoitWolf regularized covariance",
+      "metrics": {
+        "flagged_ood_pct": 100.0,
+        "in_dist_mean_dist": 1.6649,
+        "ood_mean_dist": 8.6537,
+        "false_alarm_rate": 0.0208
+      },
+      "scientific_status": "Cross-instrument / dataset domain shift detector. Demonstrates sensor/illumination divergence between datasets; not proven as general-purpose real-world apple OOD detector.",
+      "date": "2026-09-12"
+    },
+    "brix_sweetness_regression": {
+      "name": "Essex Hyperspectral Benchmark Brix Prediction",
+      "dataset": "University of Essex Hyperspectral Benchmark (DOI: 10.5526/ERDR-00000228)",
+      "sample_size": "60 scans across 33 physical apples (3 cultivars: Braeburn, Cox, Gala)",
+      "ground_truth": "ATAGO PR-32-alpha refractometer (\u00b0Bx)",
+      "validation": "Strict GroupKFold by physical apple ID",
+      "models": {
+        "Specim_IQ_204band_Ridge": {
+          "r2": -0.045,
+          "rmse": 1.197,
+          "mae": 0.98
+        },
+        "AS7265x_18channel_twin_Ridge": {
+          "r2": -0.0316,
+          "rmse": 1.19,
+          "mae": 0.97
+        },
+        "AS7265x_18channel_twin_noisy": {
+          "r2": -0.008,
+          "rmse": 1.176,
+          "mae": 0.96
+        }
+      },
+      "scientific_status": "Negative R\u00b2 indicates guessing the mean outperforms the model. Demonstrates that 18 multispectral channels under current sampling do not contain sufficient signal for reliable non-destructive Brix prediction.",
+      "date": "2026-09-12"
+    },
+    "visual_surface_quality": {
+      "name": "External Visual Defect Classification",
+      "architecture": "MobileNetV3-Small (PyTorch transfer learning)",
+      "metrics": {
+        "accuracy": 0.9567,
+        "precision": 0.9724,
+        "recall": 0.94,
+        "macro_f1": 0.956
+      },
+      "validation": "Random image-level split",
+      "scientific_status": "High surface defect classification accuracy. Note: image-level split carries risk of cross-image leakage if multiple photos of the same physical apple exist; apple-level grouped evaluation needed for field validation.",
+      "date": "2026-09-08"
+    },
+    "ripeness_maturity_grading": {
+      "name": "Maturity 3-Class Ripeness Grading (GroupKFold)",
+      "dataset": "data/quality/ripeness_variety_features.csv",
+      "classes": [
+        "Under-ripe",
+        "Ripe",
+        "Over-ripe"
+      ],
+      "validation": "GroupKFold by physical apple identifier (variety_apple)",
+      "pipeline": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
+      "metrics": {
+        "accuracy": 0.6407,
+        "balanced_accuracy": 0.6405,
+        "macro_f1": 0.6386,
+        "chance_level": 0.3333
+      },
+      "scientific_status": "Maturity classification across 18-day storage tracking (color moments and HSV features). 64.07% vs 33.3% chance.",
+      "date": "2026-09-08"
+    },
+    "variety_cultivar_classification": {
+      "name": "Cultivar 5-Class Classification (GroupKFold)",
+      "dataset": "data/quality/ripeness_variety_features.csv",
+      "classes": [
+        "kinnaur",
+        "red delicious new zealand",
+        "red delicious usa",
+        "royal gala",
+        "washington"
+      ],
+      "validation": "GroupKFold by physical apple identifier (variety_apple)",
+      "pipeline": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
+      "metrics": {
+        "accuracy": 0.4754,
+        "balanced_accuracy": 0.4753,
+        "macro_f1": 0.4713,
+        "chance_level": 0.2
+      },
+      "scientific_status": "Cultivar classification from appearance features. 47.54% vs 20.0% random chance.",
+      "date": "2026-09-08"
+    }
+  }
+}

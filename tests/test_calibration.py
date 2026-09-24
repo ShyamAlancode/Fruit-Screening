@@ -148,3 +148,73 @@ def test_gain_increases_raw_signal():
         "Higher gain did not produce higher raw signal S. "
         "Check gain wiring in sensor_simulator.py."
     )
+
+
+# ---------------------------------------------------------------------------
+# Tests 7-10: Dedicated src/calibration.py module tests
+# ---------------------------------------------------------------------------
+
+from calibration import calibrate_reflectance, validate_calibration_pair, compute_reference_mean
+
+
+def test_calibrate_reflectance_formula():
+    """Verify R = (S - D) / (W - D + eps) with known values."""
+    raw = np.full(18, 300.0, dtype=np.float32)
+    dark = np.full(18, 100.0, dtype=np.float32)
+    white = np.full(18, 500.0, dtype=np.float32)
+    # (300 - 100) / (500 - 100) = 200 / 400 = 0.5
+    cal = calibrate_reflectance(raw, dark, white)
+    np.testing.assert_allclose(cal, 0.5, atol=1e-5)
+
+
+def test_calibrate_reflectance_clips_negative():
+    """Noise causing raw < dark should be clamped to 0.0."""
+    raw = np.full(18, 50.0, dtype=np.float32)
+    dark = np.full(18, 100.0, dtype=np.float32)
+    white = np.full(18, 500.0, dtype=np.float32)
+    cal = calibrate_reflectance(raw, dark, white)
+    assert np.all(cal >= 0.0)
+
+
+def test_validate_calibration_pair():
+    """Validation passes for physical dark < white, fails when white <= dark."""
+    dark = np.full(18, 100.0, dtype=np.float32)
+    white = np.full(18, 500.0, dtype=np.float32)
+    valid, msg = validate_calibration_pair(dark, white)
+    assert valid, f"Expected valid, got: {msg}"
+
+    # Invalid case: white <= dark
+    invalid_white = np.full(18, 80.0, dtype=np.float32)
+    valid, msg = validate_calibration_pair(dark, invalid_white)
+    assert not valid
+
+
+def test_compute_reference_mean():
+    """Mean of repeated scans should equal channel average."""
+    scans = np.array([
+        np.full(18, 10.0),
+        np.full(18, 20.0),
+        np.full(18, 30.0),
+    ], dtype=np.float32)
+    mean = compute_reference_mean(scans)
+    np.testing.assert_allclose(mean, 20.0, atol=1e-5)
+
+
+def test_validate_calibration_pair_contrast_threshold():
+    """
+    Verify contrast ratio gate:
+    W / D must be >= min_contrast_ratio (default 1.2, +20% headroom).
+    """
+    dark = np.full(18, 100.0, dtype=np.float32)
+
+    # Borderline failing: white = 110 (contrast ratio = 1.1x < default 1.2x)
+    low_contrast_white = np.full(18, 110.0, dtype=np.float32)
+    valid, msg = validate_calibration_pair(dark, low_contrast_white)
+    assert not valid
+    assert "Insufficient illumination contrast" in msg
+
+    # Passing: white = 125 (contrast ratio = 1.25x >= default 1.2x)
+    valid_contrast_white = np.full(18, 125.0, dtype=np.float32)
+    valid, msg = validate_calibration_pair(dark, valid_contrast_white)
+    assert valid, f"Expected valid, got: {msg}"
+

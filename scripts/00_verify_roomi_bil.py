@@ -55,8 +55,9 @@ from datetime import datetime
 # Configuration
 # ---------------------------------------------------------------------------
 
-ROOMI_HSI_ROOT = r"d:\CFRD\DATA\Dataset\roomi_pesticide_hsi"
-REPORT_PATH    = r"d:\CFRD\project\reports\roomi_bil_verification_report.md"
+PROJECT_ROOT   = Path(__file__).resolve().parents[1]
+ROOMI_HSI_ROOT = os.environ.get("CFRD_ROOMI_HSI_ROOT", str(PROJECT_ROOT.parent / "DATA" / "Dataset" / "roomi_pesticide_hsi"))
+REPORT_PATH    = str(PROJECT_ROOT / "reports" / "roomi_bil_verification_report.md")
 
 EXPECTED_MIN_BANDS = 100          # Real Roomi has ~281 bands
 EXPECTED_MAX_BANDS = 400

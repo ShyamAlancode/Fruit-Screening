@@ -21,14 +21,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from constants import (
     CHANNEL_COLS,
     REQUIRED_CSV_COLS,
+    ROOMI_SYNTHETIC_18CH_PATH,
     SYNTHETIC_CSV_PATH,
     SPECTROFOOD_18CH_PATH,
     RANDOM_SEED,
 )
 
+# NOTE ON SYNTHETIC CONSTRUCT BIAS:
+# This script injects synthetic, class-dependent spectral perturbations into baseline spectra.
+# Performance on this dataset validates the software and ML pipeline engineering, but
+# does NOT serve as proof that physical AS7265x hardware can detect real pesticide residues.
+
 
 def generate_synthetic_roomi_csv(
-    output_path: str = SYNTHETIC_CSV_PATH,
+    output_path: str = ROOMI_SYNTHETIC_18CH_PATH,
     spectrofood_path: str = SPECTROFOOD_18CH_PATH,
     random_seed: int = RANDOM_SEED,
 ) -> pd.DataFrame:

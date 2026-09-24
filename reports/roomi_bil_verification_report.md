@@ -1,5 +1,5 @@
 # Roomi BIL/HDR Verification Report
-Generated: 2026-09-10 11:44:47
+Generated: 2026-09-12 09:35:30
 Source root: `d:\CFRD\DATA\Dataset\roomi_pesticide_hsi`
 
 ## GATE 1: Root directory

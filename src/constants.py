@@ -3,6 +3,14 @@ constants.py — Single source of truth for all project-wide constants.
 
 All configuration here is intentionally explicit and immutable.
 Nothing in this project should use magic numbers; import from here instead.
+
+AUDIT STATUS (September 24, 2026):
+  Third-party AI audit identified and corrected 7 critical issues.
+  See project/AUDIT_CORRECTIONS.md for full details.
+  Key corrections applied here:
+    - Specim IQ has 204 bands (not 300). Roomi cubes are a separate 300-band instrument.
+    - DATASET_IDENTITY_WARNING added (Issue 5 — fruit identity confounding).
+    - AUDIT_HEADLINE replaces all prior performance claims as the authoritative summary.
 """
 
 import os
@@ -88,12 +96,21 @@ REPORTS_DIR    = os.path.join(PROJECT_ROOT, "reports")
 TABLES_DIR     = os.path.join(REPORTS_DIR, "tables")
 FIGURES_DIR    = os.path.join(REPORTS_DIR, "figures")
 
-SYNTHETIC_CSV_PATH    = os.path.join(DATA_DIR, "pesticide_screening",
-                                     "roomi_synthetic_18ch",
-                                     "synthetic_as7265x_roomi_apples.csv")
-SPECTROFOOD_18CH_PATH = os.path.join(DATA_DIR, "natural_variation",
-                                     "spectrofood_18ch_sim",
-                                     "spectrofood_apple_as7265x_18ch.csv")
+ROOMI_REAL_18CH_PATH      = os.path.join(DATA_DIR, "pesticide_screening",
+                                         "roomi_real_18ch",
+                                         "roomi_real_18ch.csv")
+ROOMI_SYNTHETIC_18CH_PATH = os.path.join(DATA_DIR, "pesticide_screening",
+                                         "roomi_synthetic_simulation",
+                                         "roomi_synthetic_18ch.csv")
+# Legacy alias pointing to verified synthetic simulation dataset
+SYNTHETIC_CSV_PATH        = ROOMI_SYNTHETIC_18CH_PATH
+
+SPECTROFOOD_18CH_PATH     = os.path.join(DATA_DIR, "natural_variation",
+                                         "spectrofood_18ch_sim",
+                                         "spectrofood_apple_as7265x_18ch.csv")
+
+# AMS AS7265x hardware specification LED currents (datasheet: 12.5, 25, 50, 100 mA)
+AS7265X_LED_CURRENTS_MA: list[float] = [12.5, 25.0, 50.0, 100.0]
 
 # ---------------------------------------------------------------------------
 # Model Training
@@ -141,6 +158,45 @@ BRIX_LIMITATION: str = (
 )
 
 CAMERA_OUTPUT_LABEL: str = "External visual quality"
+
+# ---------------------------------------------------------------------------
+# Instrument Specification Corrections (Audit Issue — corrected Sep 24 2026)
+# ---------------------------------------------------------------------------
+
+# Specim IQ: 204 calibrated bands, 388-1026 nm (Essex apple quality dataset).
+# Roomi et al. cubes: 300 bands, 388.85-1026.04 nm (DIFFERENT instrument).
+# These two datasets must NOT be conflated. Earlier reports incorrectly
+# stated "Specim IQ 300 bands" — this is wrong. See AUDIT_CORRECTIONS.md §7.
+SPECIM_IQ_N_BANDS: int = 204         # Correct Specim IQ band count
+ROOMI_CUBE_N_BANDS: int = 300        # Roomi et al. cube band count (different instrument)
+SPECIM_IQ_RANGE_NM: tuple = (388, 1026)
+ROOMI_CUBE_RANGE_NM: tuple = (388, 1026)
+
+# ---------------------------------------------------------------------------
+# Dataset Identity Warning (Audit Issue 5 — fruit confounding)
+# ---------------------------------------------------------------------------
+
+DATASET_IDENTITY_WARNING: str = (
+    "WARNING (Audit Issue 5): Fruit identity and treatment condition are potentially "
+    "confounded in the Roomi dataset. 'A1' and 'F_A1' share filenames (A1_F1...) and "
+    "may be the same physical fruit rescanned. Unique MD5 hashes prove different byte "
+    "streams, not different fruits. Shutter-time differences between clean and treated "
+    "scans in cohorts 'apple 1' (18.8 vs 29.3 ms) and 'A1' (9.7 vs 11.5 ms) may "
+    "contribute to apparent spectral separability independently of pesticide chemistry. "
+    "No further pesticide ML modelling is recommended until the Roomi dataset authors "
+    "clarify physical fruit identity and confirm calibrated-count usage."
+)
+
+# ---------------------------------------------------------------------------
+# Authoritative Audit Headline (replaces all prior headline claims)
+# ---------------------------------------------------------------------------
+
+AUDIT_HEADLINE: str = (
+    "CFRD is a well-instrumented, honestly audited pre-hardware research prototype. "
+    "No reliable cross-apple pesticide signal has been established on the available "
+    "28-cube dataset. Physical validation with the AMS AS7265x sensor and LC-MS/MS "
+    "chemical ground truth is required before any screening performance claim can be made."
+)
 
 # ---------------------------------------------------------------------------
 # Forbidden Terms (must not appear in any report or dashboard output)

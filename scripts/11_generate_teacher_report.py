@@ -44,10 +44,9 @@ REPORT_OUTPUT = os.path.join(REPORTS_DIR, "teacher_demo_report.md")
 
 
 def get_latest_figure(pattern: str) -> str:
-    matches = glob.glob(os.path.join(FIGURES_DIR, pattern))
+    matches = sorted(glob.glob(os.path.join(FIGURES_DIR, pattern)))
     if not matches:
         return ""
-    matches.sort(key=os.path.getmtime)
     # Return relative markdown link
     rel = os.path.relpath(matches[-1], os.path.dirname(REPORT_OUTPUT)).replace("\\", "/")
     return f"![{pattern}]({rel})"

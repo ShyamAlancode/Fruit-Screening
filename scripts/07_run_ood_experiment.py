@@ -45,12 +45,16 @@ from ood import MahalanobisOOD, run_domain_shift_test
 MODELS_DIR_TC = os.path.join(MODELS_DIR, "treatment_condition")
 
 
+from model_registry import get_model_path, load_manifest
+
 def find_latest_model(models_dir: str):
-    files = glob.glob(os.path.join(models_dir, "*.joblib"))
-    if not files:
-        return None
-    files.sort(key=os.path.getmtime)
-    return files[-1]
+    # Check manifest first
+    p = get_model_path("treatment_3class_synthetic")
+    if p and p.exists():
+        return str(p)
+    # Fallback to sorted filenames by name rather than mtime
+    files = sorted(glob.glob(os.path.join(models_dir, "*.joblib")))
+    return files[-1] if files else None
 
 
 def main():

@@ -50,11 +50,28 @@ MODELS_DIR_TREATMENT = os.path.join(MODELS_DIR, "treatment_condition")
 MODELS_DIR_QUALITY = os.path.join(MODELS_DIR, "quality")
 
 
+from model_registry import get_model_path, load_manifest
+
 def find_latest_model(folder: str, pattern: str = "*.joblib"):
-    matches = glob.glob(os.path.join(folder, pattern))
+    # First check if the folder matches any registered model
+    folder_str = str(folder).lower()
+    if "quality" in folder_str:
+        if "ripeness" in pattern:
+            p = get_model_path("ripeness_classifier")
+            if p and p.exists():
+                return str(p)
+        elif "variety" in pattern:
+            p = get_model_path("variety_classifier")
+            if p and p.exists():
+                return str(p)
+    elif "treatment" in folder_str:
+        p = get_model_path("treatment_3class_synthetic")
+        if p and p.exists():
+            return str(p)
+
+    matches = sorted(glob.glob(os.path.join(folder, pattern)))
     if not matches:
         return None
-    matches.sort(key=os.path.getmtime)
     return matches[-1]
 
 
@@ -140,7 +157,10 @@ def test_apple(image_path: str):
         used_mobilenet = False
         if TORCH_AVAILABLE and os.path.exists(mobilenet_path):
             try:
-                cp = torch.load(mobilenet_path, map_location="cpu", weights_only=False)
+                try:
+                    cp = torch.load(mobilenet_path, map_location="cpu", weights_only=True)
+                except Exception:
+                    cp = torch.load(mobilenet_path, map_location="cpu", weights_only=False)
                 net = models.mobilenet_v3_small(weights=None)
                 net.classifier[3] = nn.Linear(net.classifier[3].in_features, 2)
                 net.load_state_dict(cp["model_state_dict"])

@@ -1,0 +1,732 @@
+[
+  {
+    "batch": "braeburn_batch2",
+    "folder": "2024-03-08_014",
+    "xml_desc": "The spectral image is recorded in the Default Recording Mode bb 19 21 a",
+    "csv_source": "NZ2024",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 15,
+        "x_stop": 162,
+        "x_center": 88,
+        "y_start": 123,
+        "y_stop": 232,
+        "size_px": 12493
+      },
+      {
+        "x_start": 178,
+        "x_stop": 321,
+        "x_center": 249,
+        "y_start": 114,
+        "y_stop": 239,
+        "size_px": 13846
+      },
+      {
+        "x_start": 336,
+        "x_stop": 475,
+        "x_center": 405,
+        "y_start": 111,
+        "y_stop": 235,
+        "size_px": 14031
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 172,
+        "ID": "Braeburn_173",
+        "Number": 19,
+        "Brix": 16.09,
+        "Avg_firmness": 12.805,
+        "Starch": 98.0
+      },
+      {
+        "csv_idx": 173,
+        "ID": "Braeburn_174",
+        "Number": 20,
+        "Brix": 12.61,
+        "Avg_firmness": 11.075,
+        "Starch": 55.0
+      },
+      {
+        "csv_idx": 174,
+        "ID": "Braeburn_175",
+        "Number": 21,
+        "Brix": 13.05,
+        "Avg_firmness": 9.745,
+        "Starch": 41.0
+      }
+    ]
+  },
+  {
+    "batch": "braeburn_batch2",
+    "folder": "2024-03-08_015",
+    "xml_desc": "The spectral image is recorded in the Default Recording Mode bb 19 21 b",
+    "csv_source": "NZ2024",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 20,
+        "x_stop": 151,
+        "x_center": 85,
+        "y_start": 83,
+        "y_stop": 201,
+        "size_px": 12017
+      },
+      {
+        "x_start": 166,
+        "x_stop": 320,
+        "x_center": 243,
+        "y_start": 70,
+        "y_stop": 196,
+        "size_px": 15322
+      },
+      {
+        "x_start": 337,
+        "x_stop": 475,
+        "x_center": 406,
+        "y_start": 71,
+        "y_stop": 192,
+        "size_px": 12945
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 172,
+        "ID": "Braeburn_173",
+        "Number": 19,
+        "Brix": 16.09,
+        "Avg_firmness": 12.805,
+        "Starch": 98.0
+      },
+      {
+        "csv_idx": 173,
+        "ID": "Braeburn_174",
+        "Number": 20,
+        "Brix": 12.61,
+        "Avg_firmness": 11.075,
+        "Starch": 55.0
+      },
+      {
+        "csv_idx": 174,
+        "ID": "Braeburn_175",
+        "Number": 21,
+        "Brix": 13.05,
+        "Avg_firmness": 9.745,
+        "Starch": 41.0
+      }
+    ]
+  },
+  {
+    "batch": "braeburn_batch2",
+    "folder": "2024-03-08_016",
+    "xml_desc": "The spectral image is recorded in the Default Recording Mode bb 19 21 c",
+    "csv_source": "NZ2024",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 19,
+        "x_stop": 165,
+        "x_center": 92,
+        "y_start": 82,
+        "y_stop": 202,
+        "size_px": 11272
+      },
+      {
+        "x_start": 185,
+        "x_stop": 328,
+        "x_center": 256,
+        "y_start": 72,
+        "y_stop": 198,
+        "size_px": 14555
+      },
+      {
+        "x_start": 352,
+        "x_stop": 488,
+        "x_center": 420,
+        "y_start": 70,
+        "y_stop": 185,
+        "size_px": 11086
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 172,
+        "ID": "Braeburn_173",
+        "Number": 19,
+        "Brix": 16.09,
+        "Avg_firmness": 12.805,
+        "Starch": 98.0
+      },
+      {
+        "csv_idx": 173,
+        "ID": "Braeburn_174",
+        "Number": 20,
+        "Brix": 12.61,
+        "Avg_firmness": 11.075,
+        "Starch": 55.0
+      },
+      {
+        "csv_idx": 174,
+        "ID": "Braeburn_175",
+        "Number": 21,
+        "Brix": 13.05,
+        "Avg_firmness": 9.745,
+        "Starch": 41.0
+      }
+    ]
+  },
+  {
+    "batch": "braeburn_batch2",
+    "folder": "2024-03-08_017",
+    "xml_desc": "The spectral image is recorded in the Default Recording Mode bb 19 21 d",
+    "csv_source": "NZ2024",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 23,
+        "x_stop": 146,
+        "x_center": 84,
+        "y_start": 85,
+        "y_stop": 183,
+        "size_px": 7984
+      },
+      {
+        "x_start": 172,
+        "x_stop": 324,
+        "x_center": 248,
+        "y_start": 71,
+        "y_stop": 199,
+        "size_px": 15376
+      },
+      {
+        "x_start": 342,
+        "x_stop": 476,
+        "x_center": 409,
+        "y_start": 69,
+        "y_stop": 194,
+        "size_px": 13918
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 172,
+        "ID": "Braeburn_173",
+        "Number": 19,
+        "Brix": 16.09,
+        "Avg_firmness": 12.805,
+        "Starch": 98.0
+      },
+      {
+        "csv_idx": 173,
+        "ID": "Braeburn_174",
+        "Number": 20,
+        "Brix": 12.61,
+        "Avg_firmness": 11.075,
+        "Starch": 55.0
+      },
+      {
+        "csv_idx": 174,
+        "ID": "Braeburn_175",
+        "Number": 21,
+        "Brix": 13.05,
+        "Avg_firmness": 9.745,
+        "Starch": 41.0
+      }
+    ]
+  },
+  {
+    "batch": "cox_batch19",
+    "folder": "2023-03-03_004",
+    "xml_desc": "Cox 66 68 side 4 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 30,
+        "x_stop": 149,
+        "x_center": 89,
+        "y_start": 197,
+        "y_stop": 296,
+        "size_px": 8835
+      },
+      {
+        "x_start": 186,
+        "x_stop": 321,
+        "x_center": 253,
+        "y_start": 190,
+        "y_stop": 291,
+        "size_px": 10787
+      },
+      {
+        "x_start": 353,
+        "x_stop": 484,
+        "x_center": 418,
+        "y_start": 194,
+        "y_stop": 282,
+        "size_px": 7305
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1188,
+        "ID": "Cox's Orange Pippin_1189",
+        "Number": 66,
+        "Brix": 11.82,
+        "Avg_firmness": 8.3,
+        "Starch": 82.0
+      },
+      {
+        "csv_idx": 1189,
+        "ID": "Cox's Orange Pippin_1190",
+        "Number": 67,
+        "Brix": 11.32,
+        "Avg_firmness": 8.71,
+        "Starch": 66.0
+      },
+      {
+        "csv_idx": 1190,
+        "ID": "Cox's Orange Pippin_1191",
+        "Number": 68,
+        "Brix": 11.75,
+        "Avg_firmness": 8.93,
+        "Starch": 80.0
+      }
+    ]
+  },
+  {
+    "batch": "cox_batch19",
+    "folder": "2023-03-03_005",
+    "xml_desc": "Cox 69 71 side 1 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 30,
+        "x_stop": 153,
+        "x_center": 91,
+        "y_start": 184,
+        "y_stop": 264,
+        "size_px": 5739
+      },
+      {
+        "x_start": 206,
+        "x_stop": 320,
+        "x_center": 263,
+        "y_start": 193,
+        "y_stop": 285,
+        "size_px": 7779
+      },
+      {
+        "x_start": 362,
+        "x_stop": 486,
+        "x_center": 424,
+        "y_start": 185,
+        "y_stop": 286,
+        "size_px": 9159
+      }
+    ],
+    "csv_num_rows": 0,
+    "csv_rows": []
+  },
+  {
+    "batch": "cox_batch7",
+    "folder": "2023-03-03_036",
+    "xml_desc": "Cox 21-23 side 4 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 37,
+        "x_stop": 170,
+        "x_center": 103,
+        "y_start": 175,
+        "y_stop": 293,
+        "size_px": 11747
+      },
+      {
+        "x_start": 213,
+        "x_stop": 333,
+        "x_center": 273,
+        "y_start": 189,
+        "y_stop": 287,
+        "size_px": 8080
+      },
+      {
+        "x_start": 367,
+        "x_stop": 488,
+        "x_center": 427,
+        "y_start": 186,
+        "y_stop": 269,
+        "size_px": 6156
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1503,
+        "ID": "Gala_1504",
+        "Number": 19,
+        "Brix": 12.16,
+        "Avg_firmness": 8.47,
+        "Starch": 47.0
+      },
+      {
+        "csv_idx": 1504,
+        "ID": "Gala_1505",
+        "Number": 20,
+        "Brix": 12.57,
+        "Avg_firmness": 8.18,
+        "Starch": 43.0
+      },
+      {
+        "csv_idx": 1505,
+        "ID": "Gala_1506",
+        "Number": 21,
+        "Brix": 9.94,
+        "Avg_firmness": 7.54,
+        "Starch": 82.0
+      }
+    ]
+  },
+  {
+    "batch": "cox_batch7",
+    "folder": "2023-03-03_037",
+    "xml_desc": "Cox 24-26 side 1 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 43,
+        "x_stop": 178,
+        "x_center": 110,
+        "y_start": 188,
+        "y_stop": 296,
+        "size_px": 10973
+      },
+      {
+        "x_start": 204,
+        "x_stop": 329,
+        "x_center": 266,
+        "y_start": 174,
+        "y_stop": 298,
+        "size_px": 11094
+      },
+      {
+        "x_start": 356,
+        "x_stop": 478,
+        "x_center": 417,
+        "y_start": 192,
+        "y_stop": 285,
+        "size_px": 8150
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1152,
+        "ID": "Cox's Orange Pippin_1153",
+        "Number": 24,
+        "Brix": 12.62,
+        "Avg_firmness": 8.105,
+        "Starch": 67.0
+      },
+      {
+        "csv_idx": 1153,
+        "ID": "Cox's Orange Pippin_1154",
+        "Number": 25,
+        "Brix": 10.18,
+        "Avg_firmness": 8.245000000000001,
+        "Starch": 96.0
+      },
+      {
+        "csv_idx": 1154,
+        "ID": "Cox's Orange Pippin_1155",
+        "Number": 26,
+        "Brix": 12.13,
+        "Avg_firmness": 9.085,
+        "Starch": 80.0
+      }
+    ]
+  },
+  {
+    "batch": "gala_batch13",
+    "folder": "2023-03-03_053",
+    "xml_desc": "Gala 31 33 3 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 50,
+        "x_stop": 163,
+        "x_center": 106,
+        "y_start": 194,
+        "y_stop": 296,
+        "size_px": 7261
+      },
+      {
+        "x_start": 213,
+        "x_stop": 327,
+        "x_center": 270,
+        "y_start": 195,
+        "y_stop": 310,
+        "size_px": 9978
+      },
+      {
+        "x_start": 374,
+        "x_stop": 485,
+        "x_center": 429,
+        "y_start": 200,
+        "y_stop": 302,
+        "size_px": 8248
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1161,
+        "ID": "Cox's Orange Pippin_1162",
+        "Number": 36,
+        "Brix": 11.7,
+        "Avg_firmness": 8.54,
+        "Starch": 69.0
+      },
+      {
+        "csv_idx": 1162,
+        "ID": "Cox's Orange Pippin_1163",
+        "Number": 37,
+        "Brix": 11.93,
+        "Avg_firmness": 8.105,
+        "Starch": 64.0
+      },
+      {
+        "csv_idx": 1163,
+        "ID": "Cox's Orange Pippin_1164",
+        "Number": 38,
+        "Brix": 11.77,
+        "Avg_firmness": 7.725,
+        "Starch": 38.0
+      }
+    ]
+  },
+  {
+    "batch": "gala_batch13",
+    "folder": "2023-03-03_054",
+    "xml_desc": "Gala 31 33 4 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 44,
+        "x_stop": 164,
+        "x_center": 104,
+        "y_start": 193,
+        "y_stop": 306,
+        "size_px": 9857
+      },
+      {
+        "x_start": 212,
+        "x_stop": 331,
+        "x_center": 271,
+        "y_start": 195,
+        "y_stop": 307,
+        "size_px": 10521
+      },
+      {
+        "x_start": 365,
+        "x_stop": 469,
+        "x_center": 417,
+        "y_start": 200,
+        "y_stop": 295,
+        "size_px": 6219
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1161,
+        "ID": "Cox's Orange Pippin_1162",
+        "Number": 36,
+        "Brix": 11.7,
+        "Avg_firmness": 8.54,
+        "Starch": 69.0
+      },
+      {
+        "csv_idx": 1162,
+        "ID": "Cox's Orange Pippin_1163",
+        "Number": 37,
+        "Brix": 11.93,
+        "Avg_firmness": 8.105,
+        "Starch": 64.0
+      },
+      {
+        "csv_idx": 1163,
+        "ID": "Cox's Orange Pippin_1164",
+        "Number": 38,
+        "Brix": 11.77,
+        "Avg_firmness": 7.725,
+        "Starch": 38.0
+      }
+    ]
+  },
+  {
+    "batch": "gala_batch13",
+    "folder": "2023-03-03_055",
+    "xml_desc": "Gala 34 36 1 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 38,
+        "x_stop": 155,
+        "x_center": 96,
+        "y_start": 208,
+        "y_stop": 303,
+        "size_px": 8429
+      },
+      {
+        "x_start": 200,
+        "x_stop": 320,
+        "x_center": 260,
+        "y_start": 184,
+        "y_stop": 275,
+        "size_px": 6106
+      },
+      {
+        "x_start": 363,
+        "x_stop": 491,
+        "x_center": 427,
+        "y_start": 187,
+        "y_stop": 297,
+        "size_px": 9283
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1518,
+        "ID": "Gala_1519",
+        "Number": 34,
+        "Brix": 11.49,
+        "Avg_firmness": 9.255,
+        "Starch": 94.0
+      },
+      {
+        "csv_idx": 1519,
+        "ID": "Gala_1520",
+        "Number": 35,
+        "Brix": 12.93,
+        "Avg_firmness": 7.37,
+        "Starch": 20.0
+      },
+      {
+        "csv_idx": 1520,
+        "ID": "Gala_1521",
+        "Number": 36,
+        "Brix": 12.93,
+        "Avg_firmness": 7.17,
+        "Starch": 12.0
+      }
+    ]
+  },
+  {
+    "batch": "gala_batch13",
+    "folder": "2023-03-04_013",
+    "xml_desc": "Gala 57 59 2 The spectral image is recorded in the Default Recording Mode",
+    "csv_source": "NZ2023",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 60,
+        "x_stop": 182,
+        "x_center": 121,
+        "y_start": 194,
+        "y_stop": 319,
+        "size_px": 10669
+      },
+      {
+        "x_start": 205,
+        "x_stop": 335,
+        "x_center": 270,
+        "y_start": 194,
+        "y_stop": 325,
+        "size_px": 13612
+      },
+      {
+        "x_start": 358,
+        "x_stop": 484,
+        "x_center": 421,
+        "y_start": 186,
+        "y_stop": 306,
+        "size_px": 9757
+      }
+    ],
+    "csv_num_rows": 3,
+    "csv_rows": [
+      {
+        "csv_idx": 1541,
+        "ID": "Gala_1542",
+        "Number": 57,
+        "Brix": 12.45,
+        "Avg_firmness": 8.719999999999999,
+        "Starch": 47.0
+      },
+      {
+        "csv_idx": 1542,
+        "ID": "Gala_1543",
+        "Number": 58,
+        "Brix": 12.67,
+        "Avg_firmness": 7.79,
+        "Starch": 30.0
+      },
+      {
+        "csv_idx": 1543,
+        "ID": "Gala_1544",
+        "Number": 59,
+        "Brix": 11.09,
+        "Avg_firmness": 7.865,
+        "Starch": 40.0
+      }
+    ]
+  },
+  {
+    "batch": "gala_batch13",
+    "folder": "2023-03-04_014",
+    "xml_desc": "",
+    "csv_source": "",
+    "num_blobs": 3,
+    "blob_positions": [
+      {
+        "x_start": 36,
+        "x_stop": 168,
+        "x_center": 102,
+        "y_start": 193,
+        "y_stop": 315,
+        "size_px": 12066
+      },
+      {
+        "x_start": 194,
+        "x_stop": 328,
+        "x_center": 261,
+        "y_start": 184,
+        "y_stop": 322,
+        "size_px": 13433
+      },
+      {
+        "x_start": 355,
+        "x_stop": 481,
+        "x_center": 418,
+        "y_start": 187,
+        "y_stop": 290,
+        "size_px": 8027
+      }
+    ],
+    "csv_num_rows": 0,
+    "csv_rows": []
+  }
+]

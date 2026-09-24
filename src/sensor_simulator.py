@@ -26,6 +26,11 @@ from constants import (
     SIM_LED_SCALE_DEFAULT, SIM_GAIN_DEFAULT,
     SIM_PLACEMENT_DEFAULT, SIM_DRIFT_DEFAULT,
 )
+try:
+    from calibration import calibrate_reflectance
+except ImportError:
+    from src.calibration import calibrate_reflectance
+
 
 
 # ---------------------------------------------------------------------------
@@ -142,8 +147,10 @@ def simulate_scan(
     # -----------------------------------------------------------------------
     # Calibration: remove dark contribution and normalise against white ref
     # R_k = (S_k - D_k) / (W_k - D_k + epsilon)
+    # Delegated to src/calibration.py single source of truth
     # -----------------------------------------------------------------------
-    calibrated = (S - D) / (W - D + SIM_EPSILON)
+    calibrated = calibrate_reflectance(S, D, W, epsilon=SIM_EPSILON, clip_min=None)
+
 
     return {
         "dark": D,

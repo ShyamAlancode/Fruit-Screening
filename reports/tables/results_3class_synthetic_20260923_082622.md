@@ -1,0 +1,32 @@
+# 3-Class Treatment-Condition Classifier Results (synthetic)
+
+Synthetic Simulation Pipeline Test (Synthetic construct bias; proves ML pipeline learns label shifts)
+
+## PCA+LDA (Primary Baseline)
+
+| Fold | Train rows | Test rows | Accuracy | Bal. Accuracy | Macro-F1 |
+|---|---|---|---|---|---|
+| 1 | 192 | 48 | 0.6875 | 0.7778 | 0.7220 |
+| 2 | 192 | 48 | 0.8750 | 0.9167 | 0.8857 |
+| 3 | 192 | 48 | 0.7500 | 0.8333 | 0.7778 |
+| 4 | 192 | 48 | 0.5417 | 0.5278 | 0.4830 |
+| 5 | 192 | 48 | 0.6042 | 0.6389 | 0.6026 |
+| **Mean** | — | — | **0.6917 ± 0.1159** | **0.7389** | **0.6942** |
+
+## PCA+SVM RBF (Comparison)
+
+| Fold | Train rows | Test rows | Accuracy | Bal. Accuracy | Macro-F1 |
+|---|---|---|---|---|---|
+| 1 | 192 | 48 | 0.3125 | 0.2917 | 0.2757 |
+| 2 | 192 | 48 | 0.6250 | 0.5833 | 0.4762 |
+| 3 | 192 | 48 | 0.7292 | 0.8056 | 0.7517 |
+| 4 | 192 | 48 | 0.4167 | 0.5417 | 0.3896 |
+| 5 | 192 | 48 | 0.6875 | 0.7639 | 0.7075 |
+| **Mean** | — | — | **0.5542 ± 0.1617** | **0.5972** | **0.5201** |
+
+## Summary
+
+| Pipeline | Mean Acc | Std Acc | Bal Acc | Macro-F1 |
+|---|---|---|---|---|
+| PCA+LDA  | 0.6917 | 0.1159 | 0.7389 | 0.6942 |
+| PCA+SVM  | 0.5542 | 0.1617 | 0.5972 | 0.5201 |
