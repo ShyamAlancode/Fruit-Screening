@@ -23,13 +23,14 @@
 │                                 PHASE-BY-PHASE ROADMAP                                 │
 ├────────────────────┬────────────────────┬────────────────────┬─────────────────────────┤
 │      PHASE 1       │      PHASE 2       │      PHASE 3       │      PHASE 4 & 5        │
-│    DIGITAL TWIN    │     3D CAD BOX     │   WIRING & I2C     │   REAL DATA & AI DEPLOY │
-│  (Pure Software)   │  (FreeCAD/OpenSCAD)│ (RPi + AS7265x)    │   (80 Fruits + Gating)  │
+│    DIGITAL TWIN    │     3D CAD BOX     │   WIRING & I2C     │   REAL DATA & VALIDATE  │
+│  (Pure Software)   │  (FreeCAD/OpenSCAD)│ (RPi + AS7265x)    │   (Physical Apples)     │
 ├────────────────────┼────────────────────┼────────────────────┼─────────────────────────┤
-│ • Simulate 18ch    │ • Model Dark Box   │ • Connect I2C bus  │ • Scan 80 market apples │
-│ • Model noise/heat │ • 20-25mm standoff │ • Test Pi Camera   │ • Control vs Nativo-High│
-│ • Validate binary  │ • 45° LED angle    │ • Teflon calibrate │ • OOD Confidence Gating │
-│   97.5% model      │ • 100% Offline CAD │ • Read 18 channels │ • Reaches ~90% accuracy │
+│ • Simulate 18ch    │ • Model Dark Box   │ • Connect I2C bus  │ • Scan 20+ market apples│
+│ • Model noise/heat │ • 20-25mm standoff │ • Test Pi Camera   │ • Control vs treated    │
+│ • LOAO benchmark   │ • 45° LED angle    │ • Teflon calibrate │ • OOD Confidence Gating │
+│   75% scan acc     │ • 100% Offline CAD │ • Read 18 channels │ • Physical validation   │
+│   (SIMULATION)     │                    │ • Verify LED modes │   (performance TBD)     │
 └────────────────────┴────────────────────┴────────────────────┴─────────────────────────┘
 ```
 

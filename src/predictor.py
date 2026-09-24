@@ -122,20 +122,37 @@ class BrixResult:
     estimated_brix: float
     unit: str = "°Bx"
     sweetness_tier: str = "Medium"
-    model_used: str = "HistGradientBoosting (AS7265x 18-Ch Twin, Essex HSI Calibrated)"
-    # Primary continuous regression metrics
-    mae: float = 0.84
-    rmse: float = 1.08
-    r2: float = 0.4270
-    pearson_r: float = 0.665
-    # Secondary derived screening definition
-    screening_definition: str = (
-        "Commercial binary screening at >= 12.0 °Bx (83.21% cross-validated classification accuracy "
-        "across mixed cultivars; 95.6% within varietal calibration)."
-    )
+    model_used: str = "Brix model — see scientific_warning for provenance status"
+    # -----------------------------------------------------------------------
+    # BRIX BENCHMARK STATUS: UNDER PROVENANCE RECONCILIATION (Audit §2.11)
+    # Two benchmark generations currently exist with conflicting conclusions:
+    #
+    # Generation 1 (VERIFIED, Sept 15 registry, authoritative):
+    #   60 scans, 33 apples, 3 cultivars, GroupKFold
+    #   204-band R² = −0.045,  18-ch twin R² = −0.0316  ← PRIMARY RESULT
+    #
+    # Generation 2 (UNRECONCILED, Sept 24 larger benchmark):
+    #   417 observations, 109 fruits, 5 cultivars, GroupKFold
+    #   204-band PLSR R² = 0.4789,  18-ch HGB R² = 0.4270
+    #   CAVEAT: processed master dataset not packaged; model selected as
+    #   best-of-12 on same CV data (selection optimism); external paths only.
+    #
+    # Until provenance is frozen (one pipeline, one SHA256, one version),
+    # report BOTH values and state "under reconciliation".
+    # -----------------------------------------------------------------------
+    # Verified Generation 1 metrics (authoritative):
+    r2_verified: float = -0.0316
+    rmse_verified: float = 1.19
+    # Unreconciled Generation 2 metrics (larger but not reproducible from repo):
+    r2_gen2_unreconciled: float = 0.4270
+    mae_gen2_unreconciled: float = 0.84
     scientific_warning: str = (
-        "Continuous chemometric regression from 18-channel AS7265x simulated twin (410-940 nm). "
-        "Calibrated against 417 University of Essex Specim IQ refractometer ground-truth apples."
+        "BRIX UNDER RECONCILIATION (Audit Review §2.11, Sep 24 2026): "
+        "Two benchmark generations exist. "
+        "Authoritative verified result (Sept 15, 60 scans, GroupKFold): R² = −0.03, RMSE = 1.19 °Bx. "
+        "Larger unreconciled benchmark (Sept 24, 417 obs, GroupKFold): R² = 0.43, MAE = 0.84 °Bx — "
+        "raw dataset external to repo; model selected as best-of-12 on same CV data. "
+        "Do not present either as the sole final result until provenance is frozen."
     )
 
 
