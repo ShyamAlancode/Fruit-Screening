@@ -85,14 +85,14 @@ def register_model(
     ds_p = Path(dataset_path).resolve()
 
     try:
-        rel_filepath = str(p.relative_to(PROJECT_ROOT))
+        rel_filepath = p.relative_to(PROJECT_ROOT).as_posix()  # always forward slashes
     except ValueError:
-        rel_filepath = str(p)
+        rel_filepath = p.as_posix()
 
     try:
-        rel_dataset = str(ds_p.relative_to(PROJECT_ROOT))
+        rel_dataset = ds_p.relative_to(PROJECT_ROOT).as_posix()  # always forward slashes
     except ValueError:
-        rel_dataset = str(ds_p)
+        rel_dataset = ds_p.as_posix()
 
     entry = {
         "model_key": model_key,
@@ -114,19 +114,38 @@ def register_model(
 
 
 def get_model_path(model_key: str) -> Optional[Path]:
-    """Look up model path from manifest, with fallback to directory search."""
+    """
+    Look up model path from manifest, with fallback to directory search.
+
+    Cross-platform fix (Review 3, Sep 25 2026):
+    Manifest paths are stored with forward slashes (POSIX convention).
+    Path() handles forward slashes correctly on both Windows and Linux.
+    """
     manifest = load_manifest()
     entry = manifest.get("models", {}).get(model_key)
     if entry:
-        p = PROJECT_ROOT / entry["filepath"]
+        # Normalize: replace any stray backslashes before constructing Path
+        raw_path = entry.get("filepath", "").replace("\\", "/")
+        p = PROJECT_ROOT / raw_path
         if p.exists():
             return p
 
-    # Fallback to known subdirectories
-    for sub in ["treatment_condition", "camera", "quality", "brix"]:
-        candidates = list((MODELS_DIR / sub).glob(f"*{model_key}*"))
-        if candidates:
-            return candidates[0]
+    # Fallback: search by model_key stem match in known subdirectories
+    # Use partial filename matching (the key may not exactly match the timestamp filename)
+    for sub in ["treatment_condition", "camera", "quality", "brix", ""]:
+        search_dir = MODELS_DIR / sub if sub else MODELS_DIR
+        if not search_dir.exists():
+            continue
+        # Try exact key match first, then substring match
+        for pattern in [f"*{model_key}*.joblib", f"*{model_key}*.pth"]:
+            candidates = sorted(search_dir.glob(pattern))
+            if candidates:
+                return candidates[-1]  # newest by sort order
+        # Also search with key parts (handles 'treatment_3class_synthetic' -> file contains it)
+        key_parts = model_key.split("_")
+        for f in sorted(search_dir.glob("*.joblib")) + sorted(search_dir.glob("*.pth")):
+            if all(part in f.name for part in key_parts if len(part) > 3):
+                return f
     return None
 
 

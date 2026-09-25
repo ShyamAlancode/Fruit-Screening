@@ -206,3 +206,47 @@ and moved from performance claims to the "Methodology Exploration" appendix.
 > **CFRD is a well-instrumented, honestly audited pre-hardware research prototype.**  
 > **No reliable cross-apple pesticide signal has been established on the available 28-cube dataset.**  
 > **Physical validation with the AMS AS7265x sensor and LC-MS/MS chemical ground truth is required before any screening performance claim can be made.**
+
+---
+
+## Issue 8 — Cross-Platform Model Path Bug (Found by Third Reviewer, Sep 25 2026)
+
+### What was wrong
+
+`model_manifest.json` stored all `filepath` and `dataset_path` values using **Windows backslash separators** (e.g. `"models\\treatment_condition\\..."`). This is a Python `str(Path.relative_to())` artefact on Windows — `Path.__str__` returns native OS separators.
+
+On Linux/macOS, `PROJECT_ROOT / "models\\treatment_condition\\..."` treats the entire string as a **single path component** with literal backslashes, so the file is never found. `get_model_path` returned `None`, and any code that subscripted the result (`model['pipeline']`) immediately raised `TypeError: 'NoneType' object is not subscriptable`.
+
+The fallback directory search also failed because `*treatment_3class_synthetic*` does not match filenames that contain `_20260923_082626` — the timestamp suffix breaks simple substring glob.
+
+### Effect
+
+10 of 96 tests failed on non-Windows systems (all pesticide model loading tests) with:
+```
+TypeError: 'NoneType' object is not subscriptable
+```
+
+The failure was silent at the `get_model_path` call and exploded later — making it hard to diagnose without reading the registry code.
+
+### Correction applied (Sep 25 2026)
+
+1. **`src/model_registry.py` — `register_model`:** Changed `str(p.relative_to(PROJECT_ROOT))` to `p.relative_to(PROJECT_ROOT).as_posix()` — always writes forward-slash paths regardless of OS.
+
+2. **`src/model_registry.py` — `get_model_path`:** Added `entry["filepath"].replace("\\", "/")` before `PROJECT_ROOT / path` — normalizes any pre-existing backslashes in the manifest.
+
+3. **`src/model_registry.py` — fallback search:** Improved from exact substring glob (`*model_key*`) to a key-part matching loop that handles timestamp-suffixed filenames.
+
+4. **`models/model_manifest.json`:** All 12 backslash-containing paths converted to forward slashes.
+
+5. **`tests/test_model_compatibility.py`:** Added `test_manifest_paths_are_posix` to assert that no entry in `model_manifest.json` contains a backslash — this will catch regressions on Windows immediately.
+
+### Cross-platform test added
+
+```python
+def test_manifest_paths_are_posix():
+    """model_manifest.json must use forward slashes (POSIX) in all path fields."""
+    ...
+    for key, entry in manifest.get("models", {}).items():
+        for field in ("filepath", "dataset_path"):
+            assert "\\" not in value, f"Backslash in {key}.{field}"
+```

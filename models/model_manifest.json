@@ -2,9 +2,9 @@
   "models": {
     "treatment_3class_synthetic": {
       "model_key": "treatment_3class_synthetic",
-      "filepath": "models\\treatment_condition\\treatment_3class_pca_lda_synthetic_20260923_082626.joblib",
+      "filepath": "models/treatment_condition/treatment_3class_pca_lda_synthetic_20260923_082626.joblib",
       "model_sha256": "81b4762d463aeb3cb0082427f9d580d27f9e3a2322265722fea78986f2345005",
-      "dataset_path": "data\\pesticide_screening\\roomi_synthetic_simulation\\roomi_synthetic_18ch.csv",
+      "dataset_path": "data/pesticide_screening/roomi_synthetic_simulation/roomi_synthetic_18ch.csv",
       "dataset_sha256": "9cd292e00bd02bee2b0b0f71a3229c9b07370d19d410635ceab1ada4e164c748",
       "model_type": "StandardScaler -> PCA(5) -> LDA",
       "validation_method": "5-fold GroupKFold by fruit_id (20 fruits / 240 scans)",
@@ -21,9 +21,9 @@
     },
     "treatment_3class_real": {
       "model_key": "treatment_3class_real",
-      "filepath": "models\\treatment_condition\\treatment_3class_pca_lda_real_20260915_123548.joblib",
+      "filepath": "models/treatment_condition/treatment_3class_pca_lda_real_20260915_123548.joblib",
       "model_sha256": "98958394f0f623000868962e3b87c3963d7a5af84f90b7bb161e26dcac5773a6",
-      "dataset_path": "data\\pesticide_screening\\roomi_real_18ch\\roomi_real_18ch.csv",
+      "dataset_path": "data/pesticide_screening/roomi_real_18ch/roomi_real_18ch.csv",
       "dataset_sha256": "ee4e694f92fe35855fa0d86a0a67aa96c29392e7e98c37b8d16c4fe9e51e8eb5",
       "model_type": "StandardScaler -> PCA(5) -> LDA",
       "validation_method": "5-fold GroupKFold by fruit_id (13 fruits / 26 scans)",
@@ -40,9 +40,9 @@
     },
     "camera_quality_mobilenet": {
       "model_key": "camera_quality_mobilenet",
-      "filepath": "models\\camera\\camera_quality_mobilenet.pth",
+      "filepath": "models/camera/camera_quality_mobilenet.pth",
       "model_sha256": "6f94c472d2cc85a0fa983dbd9f428c197026fdffb76527f6429598c552a52533",
-      "dataset_path": "data\\quality\\visual_quality",
+      "dataset_path": "data/quality/visual_quality",
       "dataset_sha256": "",
       "model_type": "MobileNetV3-Small (PyTorch transfer learning)",
       "validation_method": "Train/Val/Test random split (Image-level; fruit-level grouped split required for field validation)",
@@ -58,9 +58,9 @@
     },
     "ripeness_classifier": {
       "model_key": "ripeness_classifier",
-      "filepath": "models\\quality\\ripeness_classifier_20260908_114045.joblib",
+      "filepath": "models/quality/ripeness_classifier_20260908_114045.joblib",
       "model_sha256": "64d2a0660226739c9cbce5d3ac45b6609be0d3c097e237f0d296efbf024113f4",
-      "dataset_path": "data\\quality\\ripeness",
+      "dataset_path": "data/quality/ripeness",
       "dataset_sha256": "",
       "model_type": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
       "validation_method": "5-fold GroupKFold by fruit_id",
@@ -76,9 +76,9 @@
     },
     "variety_classifier": {
       "model_key": "variety_classifier",
-      "filepath": "models\\quality\\variety_classifier_20260908_114045.joblib",
+      "filepath": "models/quality/variety_classifier_20260908_114045.joblib",
       "model_sha256": "706bee8335aa0b3fd56151b31b27483820b4ce061f299e1b0a19a57250b98b09",
-      "dataset_path": "data\\quality\\variety",
+      "dataset_path": "data/quality/variety",
       "dataset_sha256": "",
       "model_type": "StandardScaler -> RandomForestClassifier(n_estimators=60, max_depth=8)",
       "validation_method": "5-fold GroupKFold by fruit_id",
@@ -94,8 +94,8 @@
     },
     "ripeness_mobilenet_v3": {
       "model_key": "ripeness_mobilenet_v3",
-      "filepath": "models\\quality\\ripeness_mobilenet_v3.pth",
-      "dataset_path": "data\\ripeness_multistage",
+      "filepath": "models/quality/ripeness_mobilenet_v3.pth",
+      "dataset_path": "data/ripeness_multistage",
       "model_type": "MobileNetV3-Small (Fine-tuned 3-stage maturity)",
       "validation_method": "Independent test set (408 instance crops) + External zero-shot (213 RawRipe apples)",
       "metrics": {

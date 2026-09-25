@@ -8,9 +8,17 @@
 > A professional prior-art search and patent attorney review are required before any claim is filed.
 
 > [!CAUTION]
-> **The monograph uses the phrase "patentable claims."**  
-> This analysis uses **"candidate claim themes"** — the correct framing until professional prior-art review is complete.  
-> Patentability cannot be inferred from technical novelty alone.
+> **Strong recommendation: do not file a patent right now.**
+>
+> This was independently assessed by a third technical reviewer (Sep 25 2026):
+> - Patents require *reduction to practice* or at least a credible, non-obvious, working claim.
+> - The central claim ("detect pesticide via 18-channel reflectance") is **statistically indistinguishable from chance** on the project's own data (AUROC 0.59, p ≈ 0.19).
+> - Multispectral fruit quality sensing is a **crowded prior-art space**: existing commercial products and patents already cover NIR/AS7265x-based fruit sorting, ripeness, and residue screening.
+> - What *might* eventually be patentable: the specific **differential/paired-reference calibration method** (treated − control referencing on the same fruit). But this is untested even computationally at cross-apple scale — only preliminary intra-cohort.
+> - Filing before statistically significant physical validation risks an expensive patent that gets rejected or protects nothing useful.
+> - **Get real hardware data and a statistically significant, replicated result first. Consult a patent attorney before deciding.**
+>
+> The monograph used the phrase "patentable claims." This document uses **"candidate claim themes"** — correct framing until professional prior-art review and physical validation are complete.
 
 ---
 

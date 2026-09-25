@@ -222,3 +222,100 @@ class TestBrixModelStatus:
         br = BrixResult(estimated_brix=11.5)
         assert "RECONCILIATION" in br.scientific_warning or "reconciliation" in br.scientific_warning.lower()
         assert br.r2_verified < 0, "Verified Brix R² must be negative (per Sept 15 registry)"
+
+
+class TestCrossPlatformPaths:
+    """
+    Tests for the cross-platform model path bug (Review 3, Sep 25 2026).
+
+    Root cause: Path.__str__ returns OS-native separators on Windows (backslashes),
+    which break path resolution on Linux/Mac when stored in model_manifest.json.
+    Fix: always use Path.as_posix() when writing to manifest.
+    See AUDIT_CORRECTIONS.md Issue 8.
+    """
+
+    def test_manifest_paths_are_posix(self):
+        """
+        All filepath/dataset_path values in model_manifest.json must use
+        forward slashes. Backslashes break path resolution on Linux/Mac.
+        This test catches regressions on Windows where str(Path) uses backslashes.
+        """
+        import json
+        manifest_path = PROJECT_ROOT / "models" / "model_manifest.json"
+        assert manifest_path.exists(), "model_manifest.json must exist"
+        with open(manifest_path, encoding="utf-8") as f:
+            manifest = json.load(f)
+        violations = []
+        for key, entry in manifest.get("models", {}).items():
+            for field in ("filepath", "dataset_path"):
+                value = entry.get(field, "")
+                # Check for literal backslash (chr 92)
+                if "\\" in value:
+                    violations.append(f"  {key}.{field}: {value!r}")
+        assert not violations, (
+            "model_manifest.json contains Windows backslashes in path fields.\n"
+            "These break path resolution on Linux/Mac.\n"
+            "Fix: use Path.as_posix() in model_registry.register_model().\n"
+            "Violations:\n" + "\n".join(violations)
+        )
+
+    def test_get_model_path_returns_path_for_known_keys(self):
+        """
+        get_model_path must return a valid Path (not None) for all manifest keys.
+        Previously returned None on Linux due to backslash paths, causing
+        TypeError: 'NoneType' object is not subscriptable downstream.
+        """
+        import json
+        import sys
+        sys.path.insert(0, str(PROJECT_ROOT / "src"))
+        from model_registry import get_model_path
+        manifest_path = PROJECT_ROOT / "models" / "model_manifest.json"
+        with open(manifest_path, encoding="utf-8") as f:
+            manifest = json.load(f)
+        missing = []
+        for key in manifest.get("models", {}).keys():
+            p = get_model_path(key)
+            if p is None or not p.exists():
+                missing.append(f"  {key}: resolved to {p}")
+        assert not missing, (
+            "get_model_path returned None or non-existent path for manifest keys.\n"
+            "This causes TypeError: 'NoneType' object is not subscriptable.\n"
+            "Keys with resolution failures:\n" + "\n".join(missing)
+        )
+
+    def test_register_model_writes_posix_paths(self, tmp_path):
+        """register_model must write forward-slash paths even when run on Windows."""
+        import sys
+        sys.path.insert(0, str(PROJECT_ROOT / "src"))
+        import model_registry as mr
+        import json
+
+        fake_model = tmp_path / "fake_model.joblib"
+        fake_model.write_bytes(b"fake")
+        fake_dataset = tmp_path / "fake_data.csv"
+        fake_dataset.write_bytes(b"fake")
+
+        # Redirect manifest to temp location to avoid polluting real manifest
+        original_manifest = mr.MANIFEST_PATH
+        test_manifest = tmp_path / "test_manifest.json"
+        test_manifest.write_text('{"models": {}, "experiments": []}')
+        mr.MANIFEST_PATH = test_manifest
+        try:
+            entry = mr.register_model(
+                model_key="test_cross_platform",
+                filepath=fake_model,
+                dataset_path=fake_dataset,
+                metrics={"acc": 0.5},
+                model_type="test",
+            )
+        finally:
+            mr.MANIFEST_PATH = original_manifest
+
+        backslash = "\\"
+        assert backslash not in entry["filepath"], (
+            f"register_model wrote backslash path: {entry['filepath']!r}. "
+            "Use Path.as_posix() to prevent this."
+        )
+        assert backslash not in entry["dataset_path"], (
+            f"register_model wrote backslash dataset_path: {entry['dataset_path']!r}"
+        )
