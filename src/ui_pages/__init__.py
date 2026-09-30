@@ -10,9 +10,11 @@ from .page_limits      import render as page_limits
 from .page_roadmap     import render as page_roadmap
 from .page_teacher     import render as page_teacher
 from .page_virtual     import render as page_virtual
+from .page_live_guided_scan import render_guided_scan_page as page_live_guided_scan
 
 __all__ = [
     "page_overview", "page_hsi_demo", "page_sim_scan",
     "page_ml_evidence", "page_binary", "page_hardware",
     "page_limits", "page_roadmap", "page_teacher", "page_virtual",
+    "page_live_guided_scan",
 ]

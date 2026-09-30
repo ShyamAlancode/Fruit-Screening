@@ -46,6 +46,7 @@ from ui_pages import (
     page_overview, page_hsi_demo, page_sim_scan,
     page_ml_evidence, page_binary, page_hardware,
     page_limits, page_roadmap, page_teacher, page_virtual,
+    page_live_guided_scan,
 )
 
 # ---------------------------------------------------------------------------
@@ -149,6 +150,7 @@ PAGES = [
     "8 · Future Product Roadmap",
     "9 · Teacher Explanation Mode",
     "10 · 🔬 Virtual Apple Scan Demonstrator — Simulation Only",
+    "11 · 🍏 5-Step Guided Scan Protocol (Live / Calibrated)",
 ]
 
 with st.sidebar:
@@ -206,3 +208,6 @@ elif page == PAGES[8]:
 
 elif page == PAGES[9]:
     page_virtual(CONSTANTS, TORCH_AVAILABLE)
+
+elif page == PAGES[10]:
+    page_live_guided_scan(CONSTANTS)

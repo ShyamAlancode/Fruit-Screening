@@ -478,10 +478,6 @@ class AS7265xDriver:
             diff = self._white_ref - self._dark_ref
             if (diff <= 0).any():
                 logger.warning("White reference has channels <= dark reference. Check tile placement.")
-        logger.info(f"White reference measured: mean={self._white_ref.mean():.1f}")
-        return self._white_ref
-        # Validate
-        if self._dark_ref is not None:
             signal = self._white_ref - self._dark_ref
             low_channels = np.where(signal < 100)[0]
             if len(low_channels) > 0:
@@ -491,6 +487,45 @@ class AS7265xDriver:
                 )
         logger.info(f"White reference measured: mean={self._white_ref.mean():.1f}")
         return self._white_ref
+
+    def read_with_illumination_sequence(
+        self,
+        sequence: Optional[List[str]] = None,
+        settle_time_s: float = 0.05,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Cycle through multiple illumination modes and record calibrated spectra:
+          - 'white': 5700K broadband white LED on AS72652
+          - 'uv':    405nm UV LED on AS72653
+          - 'ir':    875nm NIR LED on AS72651
+          - 'dark':  LEDs OFF (ambient baseline)
+
+        Returns dictionary mapping mode_name -> 18-channel calibrated reflectance.
+        """
+        seq = sequence or ["white", "uv", "ir", "dark"]
+        results: Dict[str, np.ndarray] = {}
+
+        for mode in seq:
+            mode_lower = mode.lower().strip()
+            if mode_lower == "white":
+                self.set_led(white=True, uv=False, ir=False)
+            elif mode_lower == "uv":
+                self.set_led(white=False, uv=True, ir=False)
+            elif mode_lower == "ir":
+                self.set_led(white=False, uv=False, ir=True)
+            elif mode_lower == "dark":
+                self.set_led(white=False, uv=False, ir=False)
+            else:
+                raise ValueError(f"Unknown illumination mode: {mode!r}. Choose white, uv, ir, or dark.")
+
+            if self.mode != "mock" and settle_time_s > 0:
+                time.sleep(settle_time_s)
+
+            results[mode_lower] = self.read_calibrated()
+
+        # Turn off LEDs after acquisition
+        self.set_led(white=False, uv=False, ir=False)
+        return results
 
     def get_device_temperature(self) -> float:
         """

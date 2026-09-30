@@ -72,6 +72,10 @@ from constants import (
 )
 from model_registry import get_model_path, load_manifest
 from ood import MahalanobisOOD
+try:
+    from features import compute_biochemical_indices, compute_intra_fruit_differential
+except ImportError:
+    from src.features import compute_biochemical_indices, compute_intra_fruit_differential
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +150,7 @@ class BrixResult:
     # Unreconciled Generation 2 metrics (larger but not reproducible from repo):
     r2_gen2_unreconciled: float = 0.4270
     mae_gen2_unreconciled: float = 0.84
+    mae: float = 0.84
     scientific_warning: str = (
         "BRIX UNDER RECONCILIATION (Audit Review §2.11, Sep 24 2026): "
         "Two benchmark generations exist. "
@@ -165,6 +170,27 @@ class VisualQualityResult:
 
 
 @dataclass
+class DifferentialScreeningResult:
+    """
+    Intra-fruit differential screening result (CFRD Real Implementation Plan §5 & §6.1).
+    Cancels inter-fruit cuticle wax offset (>60%) using same-fruit control referencing.
+    """
+    status: str                         # "TREATMENT SUSPECTED" | "LIKELY CLEAN" | "INCONCLUSIVE"
+    anomaly_score: float                # Normalized differential anomaly score [0.0, 1.0]
+    confidence: float                   # Confidence of decision
+    differential_magnitude: float       # L2 norm of difference vector ||T_avg - C||
+    wax_baseline_suppression_pct: float # Percent of biological offset canceled
+    num_spots_evaluated: int            # Number of equatorial perimeter spots scanned
+    recommendation: str                 # Operational guidance for operator
+    delta_r: List[float]                # 18-channel raw difference vector
+    delta_diff_17: List[float]          # 17-channel second-difference curvature features
+    disclaimer: str = (
+        "Intra-fruit differential screening research prototype. Does NOT constitute a "
+        "certified chemical residue, ppm concentration, or regulatory food safety decision."
+    )
+
+
+@dataclass
 class ApplePrediction:
     spectrum_18ch: List[float]
     pesticide: PesticideResult
@@ -172,6 +198,8 @@ class ApplePrediction:
     variety: VarietyResult
     brix: BrixResult
     visual_quality: Optional[VisualQualityResult] = None
+    differential_screening: Optional[DifferentialScreeningResult] = None
+    biochemical_indices: Optional[Dict[str, float]] = None
     input_source: str = "multimodal"
 
     def to_dict(self) -> Dict[str, Any]:
@@ -185,14 +213,27 @@ class ApplePrediction:
             f"  * Visual Defect Risk:  {self.visual_quality.status} (prob={self.visual_quality.defect_probability:.1%})\n"
             if self.visual_quality else ""
         )
+        diff_str = (
+            f"  * Differential Check:  {self.differential_screening.status} "
+            f"(Score: {self.differential_screening.anomaly_score:.2f}, Suppr: {self.differential_screening.wax_baseline_suppression_pct:.1f}%)\n"
+            if self.differential_screening else ""
+        )
+        bio_str = (
+            f"  * Bio Indices:         ARI={self.biochemical_indices.get('ARI', 0.0):.2f}, "
+            f"CI={self.biochemical_indices.get('CI', 0.0):.2f}, "
+            f"NDVI={self.biochemical_indices.get('ndvi_analog', 0.0):.2f}\n"
+            if self.biochemical_indices else ""
+        )
         return (
             f"[CFRD] Apple Prediction Summary\n"
             f"{'='*60}\n"
             f"  * Pesticide Screening: {self.pesticide.label} (Conf: {self.pesticide.confidence:.1%}, OOD: {self.pesticide.ood_status})\n"
+            f"{diff_str}"
             f"  * Ripeness Stage:      {self.ripeness.stage} (Conf: {self.ripeness.confidence:.1%})\n"
             f"  * Cultivar / Variety:  {self.variety.cultivar.title()} (Conf: {self.variety.confidence:.1%})\n"
             f"  * Estimated Sweetness: {self.brix.estimated_brix:.1f} {self.brix.unit} ({self.brix.sweetness_tier} | MAE: ±{self.brix.mae:.2f} {self.brix.unit})\n"
             f"{vq_str}"
+            f"{bio_str}"
             f"{'='*60}\n"
             f"Notice: {DISCLAIMER_BANNER}"
         )
@@ -691,6 +732,12 @@ class ApplePredictor:
         cultivar_for_brix = cultivar or variety_res.cultivar
         brix_res = self.predict_brix(spec_arr, cultivar=cultivar_for_brix)
 
+        # Compute biochemical indices
+        try:
+            bio_indices = compute_biochemical_indices(spec_arr)
+        except Exception:
+            bio_indices = None
+
         return ApplePrediction(
             spectrum_18ch=spec_arr.tolist(),
             pesticide=pesticide_res,
@@ -698,7 +745,73 @@ class ApplePredictor:
             variety=variety_res,
             brix=brix_res,
             visual_quality=visual_quality,
+            differential_screening=None,
+            biochemical_indices=bio_indices,
             input_source=input_source,
+        )
+
+    def predict_differential(
+        self,
+        control_spectrum: Union[List[float], np.ndarray],
+        target_spectra: List[Union[List[float], np.ndarray]],
+        threshold_high: float = 0.70,
+        threshold_low: float = 0.40,
+    ) -> DifferentialScreeningResult:
+        """
+        Intra-Fruit Differential Screening (CFRD Real Implementation Plan §5 & §6.1).
+        Cancels out 60%+ biological cuticle wax variation using same-fruit control referencing.
+
+        Parameters
+        ----------
+        control_spectrum : (18,) array
+            Control spot spectrum (e.g. apple calyx / bottom unexposed area).
+        target_spectra : list of (18,) arrays
+            Equatorial perimeter target spots.
+        threshold_high : float, default=0.70
+            Anomaly probability above which treatment is suspected.
+        threshold_low : float, default=0.40
+            Anomaly probability below which apple is considered likely clean.
+            Values between threshold_low and threshold_high are INCONCLUSIVE.
+
+        Returns
+        -------
+        DifferentialScreeningResult
+        """
+        diff_data = compute_intra_fruit_differential(control_spectrum, target_spectra)
+        delta_r = diff_data["delta_r"]
+        delta_diff_17 = diff_data["delta_diff_17"]
+        diff_mag = float(np.linalg.norm(delta_r))
+        suppression_pct = float(diff_data["wax_baseline_suppression_pct"])
+        num_spots = int(diff_data["num_target_spots"])
+
+        # Energy of curvature variations: second differences isolate residue absorption from baseline slope
+        curvature_energy = float(np.linalg.norm(delta_diff_17))
+        # Normalization mapped from empirical noise floor (~0.01) to typical residue disturbance (~0.07)
+        score = float(np.clip((curvature_energy - 0.010) / 0.060, 0.05, 0.95))
+
+        if score >= threshold_high:
+            status = "TREATMENT SUSPECTED"
+            recommendation = "Surface variation detected exceeding control baseline. Recommend wash/recheck."
+            confidence = round(score, 3)
+        elif score <= threshold_low:
+            status = "LIKELY CLEAN"
+            recommendation = "Surface spectral profile consistent with clean reference control spot."
+            confidence = round(1.0 - score, 3)
+        else:
+            status = "INCONCLUSIVE"
+            recommendation = "Signal within boundary zone. Rescan recommended with 5 fresh perimeter spots."
+            confidence = round(1.0 - abs(score - 0.5) * 2.0, 3)
+
+        return DifferentialScreeningResult(
+            status=status,
+            anomaly_score=round(score, 3),
+            confidence=confidence,
+            differential_magnitude=round(diff_mag, 4),
+            wax_baseline_suppression_pct=round(suppression_pct, 1),
+            num_spots_evaluated=num_spots,
+            recommendation=recommendation,
+            delta_r=[round(float(x), 5) for x in delta_r],
+            delta_diff_17=[round(float(x), 5) for x in delta_diff_17],
         )
 
     def predict_spectrum(
