@@ -66,6 +66,107 @@ This is not a validated pesticide screening instrument. It is a research platfor
 
 ---
 
+## Datasets
+
+> **No raw dataset files are stored in this repository.**
+> All large hyperspectral cubes, images, and CSV ground-truth files must be downloaded
+> separately. The tables below list every dataset used, its source, size, and licence.
+
+### Dataset 1 — Roomi et al. Apple Pesticide Hyperspectral Dataset
+Used for **Agrochemical Screening** experiments (pesticide / fungicide detection).
+
+| Property | Details |
+|:---|:---|
+| **Source** | Roomi et al., Zenodo |
+| **DOI / Download** | [https://doi.org/10.5281/zenodo.7818714](https://doi.org/10.5281/zenodo.7818714) |
+| **Contents** | 28 `.bil` hyperspectral cubes (388–1026 nm, 300 bands), 617 RGB composite TIFFs |
+| **Total Size** | ~8.4 GB (cubes: 7.54 GB · RGB images: 883 MB) |
+| **Treatments** | Monostar (organophosphate insecticide) · Nativo (tebuconazole + trifloxystrobin fungicide) · Unknown field spray |
+| **Apple Cohorts** | 5 physical groups: Apple 1, APP1, A1, F_A1, P_MA1 |
+| **Licence** | CC BY 4.0 |
+| **Place after download** | `data/pesticide_screening/roomi_raw_hsi/` |
+
+```bash
+# Download all cubes via Zenodo CLI or wget:
+wget -r -np -nH --cut-dirs=3 -A "*.bil,*.hdr,*.raw" https://zenodo.org/record/7818714/files/
+```
+
+---
+
+### Dataset 2 — Essex Apple Hyperspectral & Maturity Archive (Tang et al.)
+Used for **Brix/Sweetness Regression**, **Ripeness Grading**, and **Cultivar Identification**.
+
+| Property | Details |
+|:---|:---|
+| **Source** | University of Essex Research Data Repository |
+| **DOI / Download** | [https://doi.org/10.5526/ERDR-00000228](https://doi.org/10.5526/ERDR-00000228) |
+| **Browse** | [https://researchdata.essex.ac.uk/228/](https://researchdata.essex.ac.uk/228/) |
+| **Contents** | Specim IQ hyperspectral cubes (512×512×204 bands, 397–1004 nm) for Cox, Gala, Braeburn, Fuji apples. Destructive lab measurements (°Brix, firmness, starch) for 5,464 apples. |
+| **Ground-Truth CSVs** | `data_NZ2023.csv` (1,409 apples) · `data_NZ2024.csv` (1,409 apples) · `data_UK2024.csv` (2,646 apples) |
+| **Total Size** | ~3.5 GB (varies by batches downloaded) |
+| **Licence** | CC BY 4.0 |
+| **Place after download** | Extract `.tar.gz` batches → `data/quality/apple_sweetness/` |
+
+**Direct file links from the Essex repository:**
+
+| File | Cultivar | Apples | Download |
+|:---|:---|:---:|:---|
+| `20230303 Cox 80 fruit 4 side ea_batch19.tar.gz` | Cox | 80 | [Download (210 MB)](https://researchdata.essex.ac.uk/228/files/20230303%20Cox%2080%20fruit%204%20side%20ea_batch19.tar.gz) |
+| `20230303-04 Gala 110 fruit 4 side ea_batch13.tar.gz` | Gala | 110 | [Download (438 MB)](https://researchdata.essex.ac.uk/228/files/20230303-04%20Gala%20110%20fruit%204%20side%20ea_batch13.tar.gz) |
+| `20240308 Braeburn_batch2.tar.gz` | Braeburn | ~80 | [Download (437 MB)](https://researchdata.essex.ac.uk/228/files/20240308%20Braeburn_batch2.tar.gz) |
+| `gala_batch1.tar.gz` | Gala | ~110 | [Download (586 MB)](https://researchdata.essex.ac.uk/228/files/gala_batch1.tar.gz) |
+| `gala_batch2.tar.gz` | Gala | ~110 | [Download (562 MB)](https://researchdata.essex.ac.uk/228/files/gala_batch2.tar.gz) |
+| `data_NZ2023.csv` | All NZ cultivars | 1,409 | [Download (760 KB)](https://researchdata.essex.ac.uk/228/files/data_NZ2023.csv) |
+| `data_NZ2024.csv` | All NZ cultivars | 1,409 | [Download (591 KB)](https://researchdata.essex.ac.uk/228/files/data_NZ2024.csv) |
+| `data_UK2024.csv` | All UK cultivars | 2,646 | [Download (828 KB)](https://researchdata.essex.ac.uk/228/files/data_UK2024.csv) |
+
+> [!NOTE]
+> `batch6.tar.gz` and `batch7.tar.gz` from this archive are **corrupted at source** (invalid gzip headers confirmed by MD5 match with server). Use `batch19.tar.gz` for Cox instead.
+
+---
+
+### Dataset 3 — Multi-Stage Apple Ripeness Dataset (RawRipe)
+Used for **Ripeness Grading** (3-class: immature / semi-mature / mature).
+
+| Property | Details |
+|:---|:---|
+| **Source** | Mendeley Data / academic repository |
+| **DOI / Download** | [https://doi.org/10.17632/7ry94r5xbm.1](https://doi.org/10.17632/7ry94r5xbm.1) |
+| **Contents** | Multi-stage annotated apple images (RGB) with pixel-level annotations |
+| **Licence** | CC BY 4.0 |
+| **Place after download** | `data/ripeness_multistage/` |
+
+---
+
+### Dataset 4 — Apple Visual Defect / Quality Dataset
+Used for **Visual Defect Detection** (surface rot, bruising, blemishes via MobileNetV3).
+
+| Property | Details |
+|:---|:---|
+| **Source** | Kaggle / public apple defect dataset |
+| **Download** | [https://www.kaggle.com/datasets/dataclusterlabs/apple-disease-dataset](https://www.kaggle.com/datasets/dataclusterlabs/apple-disease-dataset) |
+| **Contents** | Good/bad apple images (~3,000 images, 2 classes) |
+| **Place after download** | `data/quality/apple_good_bad/` |
+
+---
+
+### After Downloading: Build Processed CSVs
+
+Once raw datasets are in place, run the extraction scripts in order:
+
+```bash
+# 1. Extract Roomi HSI cubes → 18-channel AS7265x-simulated CSV
+python scripts/01_extract_roomi_18ch.py
+
+# 2. Build Essex hyperspectral dataset (204-band + 18-channel simulation)
+python scripts/02_build_essex_hyperspectral_dataset.py
+
+# 3. Generate synthetic Roomi simulation (for smoke testing without raw data)
+python scripts/01b_generate_synthetic_roomi_csv.py
+```
+
+---
+
 ## Known Issues and Limitations (Audit Findings)
 
 ### Critical
@@ -146,8 +247,8 @@ project/
 ### 1. Install
 
 ```bash
-git clone https://github.com/ShyamAlancode/apple_pesticide.git
-cd apple_pesticide
+git clone https://github.com/ShyamAlancode/Fruit-Screening.git
+cd Fruit-Screening/project
 pip install -r requirements.txt
 ```
 

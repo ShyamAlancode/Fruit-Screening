@@ -1,24 +1,130 @@
-# Python bytecode & cache
+# =============================================================================
+# CFRD — Compact Food Reflectance Device
+# .gitignore — Clean Repository Policy
+# Only source code, scripts, configurations, tests, and documentation are tracked.
+# Datasets, raw/processed images, large binaries, models, and caches are EXCLUDED.
+# Download datasets via the links provided in README.md § Datasets.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Python Bytecode, Build & Cache Artifacts
+# ---------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
 
-# Pytest & Coverage
+# ---------------------------------------------------------------------------
+# Virtual Environments & IDEs
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+.env
+.venv*/
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*~
+
+# ---------------------------------------------------------------------------
+# OS & System Artifacts
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.temp
+*.log
+
+# ---------------------------------------------------------------------------
+# Testing, Coverage & Jupyter
+# ---------------------------------------------------------------------------
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
+*.lcov
+.ipynb_checkpoints/
+*.ipynb
 
-# Logs & temp files
-*.log
-scratch/
-.system_generated/
+# ---------------------------------------------------------------------------
+# Streamlit & UI Runtime Cache
+# ---------------------------------------------------------------------------
+.streamlit/
 
-# Environment
-.venv/
-env/
-venv/
-ENV/
+# ---------------------------------------------------------------------------
+# Trained Model Weights & Serialized Binaries (Too large for Git)
+# ---------------------------------------------------------------------------
+*.pth
+*.pt
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+*.onnx
+*.ckpt
+*.tflite
+*.pb
+*.weights
+models/brix/
+models/camera/
+models/quality/
+models/treatment_condition/
+models/*.pth
+models/*.pt
+models/*.joblib
+models/*.pkl
+# Allow model manifest JSON tracking
+!models/model_manifest.json
 
-# OS specific
-.DS_Store
-Thumbs.db
+# ---------------------------------------------------------------------------
+# Raw & Processed Datasets (External Downloads — See README.md)
+# ---------------------------------------------------------------------------
+data/
+*.bil
+*.hdr
+*.raw
+*.dat
+*.xml
+*.mat
+*.hsi
+
+# Compressed Archives
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.7z
+*.gz
+*.rar
+
+# All Image Media Files
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.bmp
+*.svg
+*.webp
+
+# Generated Figures & Heavy Reports
+reports/figures/
+reports/tables/
+reports/*.png
+reports/*.jpg
+reports/*.svg
+reports/*.pdf
