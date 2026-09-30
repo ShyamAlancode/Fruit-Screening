@@ -2,8 +2,8 @@
   "models": {
     "treatment_3class_synthetic": {
       "model_key": "treatment_3class_synthetic",
-      "filepath": "models/treatment_condition/treatment_3class_pca_lda_synthetic_20260923_082626.joblib",
-      "model_sha256": "81b4762d463aeb3cb0082427f9d580d27f9e3a2322265722fea78986f2345005",
+      "filepath": "models/treatment_condition/treatment_3class_pca_lda_synthetic_20260930_123301.joblib",
+      "model_sha256": "c7cdae9218edd2aff92e04ce17b1c986edc5e369953e4839eb88cce2c539299e",
       "dataset_path": "data/pesticide_screening/roomi_synthetic_simulation/roomi_synthetic_18ch.csv",
       "dataset_sha256": "9cd292e00bd02bee2b0b0f71a3229c9b07370d19d410635ceab1ada4e164c748",
       "model_type": "StandardScaler -> PCA(5) -> LDA",
@@ -15,14 +15,14 @@
         "macro_f1": 0.6942215325129675,
         "svm_accuracy": 0.5541666666666666
       },
-      "git_commit": "e9f3398",
+      "git_commit": "0828760",
       "scientific_status": "Synthetic Simulation Pipeline Test (Synthetic construct bias; proves ML pipeline learns label shifts)",
       "notes": "Trained via 04_train_baseline_3class.py on synthetic"
     },
     "treatment_3class_real": {
       "model_key": "treatment_3class_real",
-      "filepath": "models/treatment_condition/treatment_3class_pca_lda_real_20260915_123548.joblib",
-      "model_sha256": "98958394f0f623000868962e3b87c3963d7a5af84f90b7bb161e26dcac5773a6",
+      "filepath": "models/treatment_condition/treatment_3class_pca_lda_real_20260930_123317.joblib",
+      "model_sha256": "e77ce8a6b19b3e3b63d3a47f26b85125d04c2271cc2431a0bf10083be9e1ff60",
       "dataset_path": "data/pesticide_screening/roomi_real_18ch/roomi_real_18ch.csv",
       "dataset_sha256": "ee4e694f92fe35855fa0d86a0a67aa96c29392e7e98c37b8d16c4fe9e51e8eb5",
       "model_type": "StandardScaler -> PCA(5) -> LDA",
@@ -34,7 +34,7 @@
         "macro_f1": 0.12,
         "svm_accuracy": 0.0
       },
-      "git_commit": "e9f3398",
+      "git_commit": "0828760",
       "scientific_status": "Real Roomi Extraction Pilot (Below random chance 33.3%; sample size 13 fruits inadequate for product claim)",
       "notes": "Trained via 04_train_baseline_3class.py on real"
     },
@@ -105,22 +105,22 @@
         "external_rawripe_accuracy": 0.8685,
         "external_ripe_recall": 0.9352
       },
-      "scientific_status": "RGB Camera Ripeness Model — UNRELATED TO AS7265x SENSOR (Audit correction Sep 24 2026)",
+      "scientific_status": "RGB Camera Ripeness Model \u2014 UNRELATED TO AS7265x SENSOR (Audit correction Sep 24 2026)",
       "notes": "AUDIT CORRECTION: The 92% ripeness claim refers to this MobileNetV3 on RGB orchard photos. It has nothing to do with the AS7265x sensor. The sensor-based spectral ripeness result is 64% (ripeness_classifier). Do NOT conflate these two results."
     },
     "pesticide_binary_shipped": {
       "model_key": "pesticide_binary_shipped",
       "filepath": "models/pesticide_binary.joblib",
       "model_type": "StandardScaler -> PCA(5) -> LDA",
-      "validation_method": "26 rows, 13 fruits — GroupKFold",
+      "validation_method": "26 rows, 13 fruits \u2014 GroupKFold",
       "metrics": {
         "accuracy": 0.5,
-        "note": "AT CHANCE (50%) — coin-flip performance"
+        "note": "AT CHANCE (50%) \u2014 coin-flip performance"
       },
       "scientific_status": "AUDIT CORRECTION (Sep 24 2026): This shipped model is PCA-LDA at 50% (chance). It is NOT the 17-diff ElasticNet LOAO model. The LOAO 75% model (max-of-75-configs) is NOT serialised in this repository.",
       "notes": "Do not present this model as the frozen LOAO ElasticNet. It is a different model at chance performance."
     }
   },
   "experiments": [],
-  "audit_corrections_applied": "September 24, 2026 — see AUDIT_CORRECTIONS.md"
+  "audit_corrections_applied": "September 24, 2026 \u2014 see AUDIT_CORRECTIONS.md"
 }

@@ -488,11 +488,25 @@ class ApplePredictor:
         spec = np.asarray(spectrum, dtype=np.float32)
 
         if self.brix_best_model is not None:
-            X = spec.reshape(1, -1)
-            scaler = self.brix_best_model["scaler"]
-            model = self.brix_best_model["model"]
-            pred = float(model.predict(scaler.transform(X))[0])
-            model_name = "HistGradientBoosting (AS7265x 18-Ch Twin, Essex HSI Calibrated)"
+            if self.brix_best_model.get("snv_enabled", False):
+                spec_snv = (spec - spec.mean()) / (spec.std() + 1e-6)
+                cult_cols = self.brix_best_model.get("cultivar_columns", ["Fuji", "Gala", "Braeburn", "Golden Delicious"])
+                cult_clean = str(cultivar).strip().lower() if cultivar else ""
+                cult_vec = np.zeros(len(cult_cols), dtype=np.float32)
+                for i, c_name in enumerate(cult_cols):
+                    if c_name.lower() in cult_clean:
+                        cult_vec[i] = 1.0
+                X = np.concatenate([spec_snv, cult_vec]).reshape(1, -1)
+                scaler = self.brix_best_model["scaler"]
+                model = self.brix_best_model["model"]
+                pred = float(model.predict(scaler.transform(X))[0])
+                model_name = "Ridge + SNV + Cultivar (R²=0.55, MAE=0.75 °Bx, 109 Essex Apples)"
+            else:
+                X = spec.reshape(1, -1)
+                scaler = self.brix_best_model["scaler"]
+                model = self.brix_best_model["model"]
+                pred = float(model.predict(scaler.transform(X))[0])
+                model_name = "HistGradientBoosting (AS7265x 18-Ch Twin, Essex HSI Calibrated)"
         elif self.brix_twin_model is not None:
             cultivar_clean = str(cultivar).strip().lower() if cultivar else ""
             if "braeburn" in cultivar_clean:

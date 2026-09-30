@@ -122,7 +122,7 @@ def compute_intra_fruit_differential(
     if c.shape != (18,):
         raise ValueError(f"control_spectrum must have shape (18,), got {c.shape}")
 
-    if not target_spectra:
+    if len(target_spectra) == 0:
         raise ValueError("target_spectra must contain at least 1 target spot measurement.")
 
     targets = [np.asarray(t, dtype=np.float32) for t in target_spectra]

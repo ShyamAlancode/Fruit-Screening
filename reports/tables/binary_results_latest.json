@@ -15,6 +15,6 @@
     "Control vs Monostar-high formulation": 25.6,
     "Low vs High treatment-formulation level": 13.3
   },
-  "timestamp": "20260923_082633",
+  "timestamp": "20260930_123326",
   "source": "scripts/05_run_binary_experiments.py"
 }
