@@ -24,9 +24,17 @@ To defeat the **"Broadband Wet Confound"** (where water-washing or surfactant fi
 | **C** | **Commercial Field Dose** | 10 apples | Sprayed uniformly with commercial formulation (e.g. Nativo @ $0.5\text{ g/L}$), air-dried for 2 hours. | Validates detection of realistic post-harvest spray residues. |
 | **D** | **Elevated Residue Dose** | 10 apples | Sprayed uniformly with commercial formulation (e.g. Nativo @ $2.0\text{ g/L}$), air-dried for 2 hours. | High-confidence ground truth positive: confirms spectral signature absorption depth. |
 
+> [!IMPORTANT]
+> **Prerequisite Sanity Check (Step 0): Intra-Fruit Clean Baseline & Peel Uniformity**  
+> Before assuming that paired same-fruit referencing isolates pesticide signals, you MUST empirically verify the intra-fruit clean baseline noise floor:
+> 1. Scan at least two clean, untreated spots on the **same untreated apple** (e.g. sun-exposed "blush" side vs shaded "ground" side).
+> 2. Quantify the intra-fruit baseline differential: $\Delta R_{\text{intra-clean}} = |R_{\text{clean, A}} - R_{\text{clean, B}}|$.
+> 3. Natural anthocyanin and cuticle thickness variations between blush and ground sides can create intra-apple differences of 2–5%. 
+> 4. **Validation rule**: The paired differential method is only physically valid if pesticide-induced differential signal $\Delta R_{\text{pesticide}} > 3 \times \sigma(\Delta R_{\text{intra-clean}})$. Do not assume Region A and Region B have identical baselines without this empirical measurement!
+
 > [!TIP]
-> **Optional Within-Fruit Paired Control (Golden Standard)**:  
-> If you want an indisputable patent claim, scan Cohort C and D apples **before spraying** (as their own clean baseline), spray and dry them, and then re-scan them. A paired $\Delta R = R_{\text{after}} - R_{\text{before}}$ eliminates fruit-to-fruit biological variance entirely!
+> **Within-Fruit Paired Control (Golden Standard)**:  
+> Scan Cohort C and D apples **before spraying** at marked spatial fiducials (as their own clean baseline), spray and dry them, and then re-scan the *exact same fiducial spots*. A paired $\Delta R = R_{\text{after}} - R_{\text{before}}$ eliminates both fruit-to-fruit and intra-fruit anatomical variance.
 
 ---
 

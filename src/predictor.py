@@ -709,6 +709,8 @@ class ApplePredictor:
         """Convenience method for spectrum-only input."""
         return self.predict(spectrum=spectrum, cultivar=cultivar)
 
+    predict_from_spectrum = predict_spectrum
+
     def predict_image(
         self,
         image: Union[str, Path, Image.Image],

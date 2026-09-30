@@ -29,8 +29,9 @@
 |---|---|
 | Treated sensitivity | 100% (18/18) — trivially achieved by predicting "treated" for all |
 | Clean specificity | **30% (3/10)** |
+| Balanced acc | **65.0%** = (sens + spec) / 2 |
 | Scan-level AUROC | **0.59** |
-| Permutation p-value | **≈0.19** |
+| Permutation p-value | **≈0.19** — NOT statistically significant |
 | 95% Wilson CI (accuracy) | **[57%, 87%]** |
 | 95% Wilson CI (specificity) | **[11%, 60%]** |
 

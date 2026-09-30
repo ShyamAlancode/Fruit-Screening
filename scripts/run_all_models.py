@@ -3,6 +3,10 @@ run_all_models.py  --  CFRD comprehensive model evaluation runner
 Executes every available model with real inputs and reports actual outputs.
 """
 import sys, json, warnings, time
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 import numpy as np
 from pathlib import Path
 
@@ -147,15 +151,31 @@ brix_paths = {
 for label, p in brix_paths.items():
     if p.exists():
         obj = joblib.load(p)
-        pipe = obj["pipeline"] if isinstance(obj, dict) else obj
-        m = obj.get("metrics", {}) if isinstance(obj, dict) else {}
-        pred = pipe.predict(SPECTRUM_18CH)[0]
+        if isinstance(obj, dict):
+            pipe = obj.get("pipeline") or obj.get("model")
+            scaler = obj.get("scaler")
+            m = obj.get("metrics", {})
+            if not m:
+                m = {k: obj[k] for k in ["r2", "rmse", "mae"] if k in obj}
+        else:
+            pipe = obj
+            scaler = None
+            m = {}
+
+        feat = SPECTRUM_18CH.copy()
+        if "twin" in label or "elasticnet" in label:
+            feat = np.concatenate([feat, [[1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]]], axis=1)
+
+        if scaler is not None:
+            feat = scaler.transform(feat)
+
+        pred = float(pipe.predict(feat)[0])
         print(f"\n  [{label}]")
         print(f"  File        : {p.name}")
         print(f"  R2          : {m.get('r2', 'N/A')}")
         print(f"  RMSE        : {m.get('rmse', 'N/A')}")
         print(f"  MAE         : {m.get('mae', 'N/A')}")
-        print(f"  ⚠ STATUS    : UNDER RECONCILIATION -- Gen1 R2=−0.03 (authoritative)")
+        print(f"  [NOTE] STATUS: UNDER RECONCILIATION -- Gen1 R2=-0.03 (authoritative)")
         print(f"  -> Predicted : {pred:.2f} degBx")
         tier = "High" if pred >= 14 else ("Medium" if pred >= 11 else "Low")
         print(f"  -> Tier      : {tier} sweetness")
@@ -173,7 +193,7 @@ print("-"*70)
 synth_csv = PROJECT_ROOT / "data" / "pesticide_screening" / "roomi_synthetic_simulation" / "roomi_synthetic_18ch.csv"
 if synth_csv.exists():
     import pandas as pd
-    from ood_detector import MahalanobisOOD
+    from ood import MahalanobisOOD
     df = pd.read_csv(synth_csv)
     ch_cols = [c for c in df.columns if c.startswith("ch_")]
     X_train = df[ch_cols].values

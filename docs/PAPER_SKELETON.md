@@ -286,3 +286,29 @@ The following must be explicitly stated in the paper:
 - [ ] Remove all "probability-delta" method claims (not implemented in supplied code)
 - [ ] Separate image model results from spectral sensor results throughout
 - [ ] Get LC-MS/MS confirmation on at least a subset of treated apples
+
+---
+
+## 8. Key Literature & Chemometrics References
+
+When referencing specific spectral bands for sugar (Brix) and water absorption in the manuscript, use the following formal literature citations:
+
+1. **Nicolaï, B. M., Beullens, K., Bobelyn, E., Peirs, A., Saeys, W., Theron, K. I., & Lammertyn, J. (2007).**  
+   *Nondestructive measurement of fruit and vegetable quality by means of NIR spectroscopy: A review.*  
+   *Postharvest Biology and Technology*, 46(2), 99–118.  
+   *(Authoritative review documenting the 3rd overtone of C–H stretching at 910–930 nm corresponding to sucrose, glucose, and fructose, and the 2nd overtone of O–H stretching at 960–980 nm corresponding to water absorption).*
+
+2. **Workman, J., & Weyer, L. (2012).**  
+   *Practical Guide and Spectral Atlas for Interpretive Near-Infrared Spectroscopy.*  
+   CRC Press / Taylor & Francis Group. ISBN 9781439818800.  
+   *(Provides the foundational vibrational assignment tables for carbohydrate C–H and water O–H overtones in agricultural spectroscopy).*
+
+3. **Roomi, M. M., et al. (2023).**  
+   *Hyperspectral imaging dataset of apples under pesticide treatments.*  
+   Zenodo Repository. DOI: 10.5281/zenodo.7818714.  
+   *(Primary dataset used for the 18-channel sensor twin pesticide screening benchmark).*
+
+4. **Tang, J., et al. (2025).**  
+   *The Essex Apple Hyperspectral Dataset for Non-Destructive Quality Assessment.*  
+   *(Primary multi-cultivar dataset used for Brix sweetness and storage ripeness benchmarks).*
+

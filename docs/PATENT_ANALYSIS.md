@@ -96,10 +96,11 @@
 > computing a differential spectrum between the reference and target regions,  
 > and classifying the differential spectrum using a pre-trained model."
 
-**Prior art risk:**
-- Reference-based spectroscopy is a broad, established field
-- Differential spectroscopy appears in NIR literature for decades
-- The novelty must reside in the specific combination, geometry, feature type, and target application
+**Prior art risk & critical caveat:**
+- Reference-based and dual-beam differential spectroscopy are decades-old chemometric techniques with heavy prior art.
+- **Untested at cross-apple physical scale**: This is strictly an unproven *candidate research hypothesis*, not a granted or proven claim.
+- **Peel non-uniformity risk**: Natural blush-side vs ground-side anthocyanin and cuticle differences can easily produce a 2–5% baseline differential on a clean apple, potentially mimicking or masking residue signals.
+- Any patentable claim must reside in a specific, non-obvious optical chamber sequencing mechanism or calibration fixture, NOT the abstract mathematical subtraction of two spots.
 - Search: intra-fruit differential spectroscopy + pesticide + surface treatment + NIR
 
 ---
